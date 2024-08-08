@@ -1,5 +1,6 @@
-import SvgColor from 'src/components/svg-color';
+import PointOfSaleTwoToneIcon from '@mui/icons-material/PointOfSaleTwoTone';
 
+import SvgColor from 'src/components/svg-color';
 // ----------------------------------------------------------------------
 
 const icon = (name) => (
@@ -23,9 +24,9 @@ const navConfig = [
   //   icon: icon('ic_cart'),
   // },
   {
-    title: '狀態',
-    path: '/blog',
-    icon: icon('ic_blog'),
+    title: '機台',
+    path: '/machine',
+    icon: <PointOfSaleTwoToneIcon />,
   },
   {
     title: 'login',
