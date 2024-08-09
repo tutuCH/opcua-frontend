@@ -24,7 +24,6 @@ export default function FactoryDialog(props) {
   const handleCreateFactoy = async (factoryName) => {
     let userId = 1; // hard coded for now
     const createNewFactoryRes = await createFactory({factoryName, userId, factoryIndex});
-    console.log(createNewFactoryRes);
     const factoryId = createNewFactoryRes.factoryId;
     const machines = [];
     insertFactoryToState(factoryIndex, {
@@ -41,7 +40,6 @@ export default function FactoryDialog(props) {
 
   const submitConnection = async (event) => {
     event.preventDefault();
-    console.log(`factoryName: ${factoryName}`);
     handleCreateFactoy(factoryName);
   };
 
