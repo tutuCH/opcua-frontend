@@ -9,7 +9,7 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Unstable_Grid2';
 
 import { posts } from 'src/_mock/blog';
-
+import AddIcon from '@mui/icons-material/Add';
 import Iconify from 'src/components/iconify/iconify';
 
 import MachineStatusCard from './machineStatusCard';
@@ -44,21 +44,23 @@ export default function Factory() {
   };
 
   const handleAddFactory = () => {
-    setFactoryDialogState(factoryDialogState.map((open, i) => (i === factories.length - 1 ? true : open)));
+    setFactoryDialogState(
+      factoryDialogState.map((open, i) => (i === factories.length - 1 ? true : open))
+    );
   };
 
   const handleCloseFactoryDialog = (index) => {
     setFactoryDialogState(factoryDialogState.map((open, i) => (i === index ? false : open)));
   };
 
-  const removeCurrentFactory = async(factoryId) => {
+  const removeCurrentFactory = async (factoryId) => {
     const removeFactoryRes = await removeFactory(factoryId);
     setFactories((prevFactories) => {
       const updatedFactories = [...prevFactories];
       updatedFactories.pop();
       return updatedFactories;
     });
-  }
+  };
   return (
     <Box>
       {factories.map((factory, factoryIndex) => {
@@ -66,15 +68,43 @@ export default function Factory() {
           <div key={factoryIndex}>
             <Typography variant="h5">{factory.factoryName}</Typography>
             <Paper variant="outlined" sx={{ p: 3 }}>
-              <Grid container spacing={4}>
-                {factory.machines?.map((machine, index) => (
+              {/* <Grid container spacing={4}> */}
+              {/* { replace with 6*3 squared react material ui transparent button with dotted outline and plus icon in the middle} */}
+              {/* {factory.machines?.map((machine, index) => (
                   <MachineStatusCard
                     key={machine.machineId}
-                    machineIndex={index}
+                    locationIndex={[0, index]}
                     machine={machine}
                     setFactories={setFactories}
                     factoryIndex={factoryIndex}
                   />
+                ))} */}
+              <Grid container spacing={4}>
+                {Array.from({ length: 50 }).map((_, index) => (
+                  <Grid key={index} xs={1.2}>
+                    <Button
+                      sx={{
+                        border: '2px dotted',
+                        borderColor: 'grey.400',
+                        backgroundColor: 'transparent',
+                        height: '100px',
+                        width: '100%',
+                        color: 'grey.500',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        '&:hover': {
+                          backgroundColor: 'grey.100',
+                        },
+                      }}
+                      onClick={() => {
+                        // Handle button click, e.g., open a dialog to add a new machine
+                        console.log(`Add new machine at index ${index}`);
+                      }}
+                    >
+                      <AddIcon sx={{ fontSize: '2rem' }} />
+                    </Button>
+                  </Grid>
                 ))}
                 <Grid xs={12} sm={4}>
                   <Button

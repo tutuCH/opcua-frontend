@@ -1,7 +1,9 @@
+// src/sections.jsx
 import { lazy, Suspense } from 'react';
 import { Outlet, Navigate, useRoutes } from 'react-router-dom';
 
 import DashboardLayout from 'src/layouts/dashboard';
+import AuthMiddleware from 'src/components/AuthMiddleware';
 
 export const IndexPage = lazy(() => import('src/pages/app'));
 export const BlogPage = lazy(() => import('src/pages/blog'));
@@ -17,11 +19,13 @@ export default function Router() {
   const routes = useRoutes([
     {
       element: (
-        <DashboardLayout>
-          <Suspense>
-            <Outlet />
-          </Suspense>
-        </DashboardLayout>
+        <AuthMiddleware>
+          <DashboardLayout>
+            <Suspense>
+              <Outlet />
+            </Suspense>
+          </DashboardLayout>
+        </AuthMiddleware>
       ),
       children: [
         { element: <IndexPage />, index: true },
@@ -33,7 +37,11 @@ export default function Router() {
     },
     {
       path: 'login',
-      element: <LoginPage />,
+      element: (
+        <AuthMiddleware>
+          <LoginPage />
+        </AuthMiddleware>
+      ),
     },
     {
       path: '404',
