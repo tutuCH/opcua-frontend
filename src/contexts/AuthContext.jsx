@@ -14,13 +14,15 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = (token) => {
+  const login = (token, userId) => {
     localStorage.setItem('access_token', token);
+    localStorage.setItem('user_id', userId);
     setIsAuthenticated(true);
   };
 
   const logout = () => {
     localStorage.removeItem('access_token');
+    localStorage.removeItem('user_id');
     setIsAuthenticated(false);
   };
 

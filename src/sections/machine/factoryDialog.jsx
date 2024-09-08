@@ -18,12 +18,12 @@ FactoryDialog.propTypes = {
 };
 
 export default function FactoryDialog(props) {
-  const { open, handleClose, factory, factoryIndex, setFactories } = props;
+  const { open, handleClose, factoryIndex, setFactories } = props;
   const [factoryName, setFactoryName] = React.useState('');
 
-  const handleCreateFactoy = async (factoryName) => {
+  const handleCreateFactory = async (factoryName) => {
     let userId = 1; // hard coded for now
-    const createNewFactoryRes = await createFactory({factoryName, userId, factoryIndex});
+    const createNewFactoryRes = await createFactory({ factoryName, userId, factoryIndex });
     const factoryId = createNewFactoryRes.factoryId;
     const machines = [];
     insertFactoryToState(factoryIndex, {
@@ -35,12 +35,13 @@ export default function FactoryDialog(props) {
     });
     // Clear the text fields
     setFactoryName('');
-    // handleClose();
-  }
+    // Close the dialog after submission
+    handleClose();
+  };
 
   const submitConnection = async (event) => {
     event.preventDefault();
-    handleCreateFactoy(factoryName);
+    handleCreateFactory(factoryName);
   };
 
   const insertFactoryToState = (factoryIndex, factory) => {
@@ -54,31 +55,34 @@ export default function FactoryDialog(props) {
         onClose={handleClose}
         PaperProps={{
           component: 'form',
-          onSubmit: (event) => {submitConnection(event)},
+          onSubmit: submitConnection,
         }}
+        aria-labelledby="factory-dialog-title"
       >
-        <DialogTitle>Subscribe</DialogTitle>
+        <DialogTitle id="factory-dialog-title">Create New Factory</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            To subscribe to your machine, please enter your IP address here. We
-            will send updates occasionally.
+            To create a new factory, please enter the factory name here.
           </DialogContentText>
           <TextField
             autoFocus
             required
             margin="dense"
             id="factoryName"
-            name="廠房匿名"
-            label="廠房匿名"
+            label="Factory Name"
             fullWidth
             variant="standard"
             value={factoryName}
             onChange={(e) => setFactoryName(e.target.value)}
-          />          
+          />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button type="submit">Submit</Button>
+          <Button onClick={handleClose} aria-hidden="false" aria-modal="true">
+            Cancel
+          </Button>
+          <Button type="submit" aria-hidden="false" aria-modal="true">
+            Submit
+          </Button>
         </DialogActions>
       </Dialog>
     </React.Fragment>

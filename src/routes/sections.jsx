@@ -10,6 +10,8 @@ export const BlogPage = lazy(() => import('src/pages/blog'));
 export const MachinePage = lazy(() => import('src/pages/machine'));
 export const UserPage = lazy(() => import('src/pages/user'));
 export const LoginPage = lazy(() => import('src/pages/login'));
+export const SignupPage = lazy(() => import('src/pages/signup'));
+export const ForgetPasswordPage = lazy(() => import('src/pages/forgotPassword'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
@@ -40,6 +42,22 @@ export default function Router() {
       element: (
         <AuthMiddleware>
           <LoginPage />
+        </AuthMiddleware>
+      ),
+    },
+    {
+      path: 'signup',
+      element: (
+        <AuthMiddleware>
+          <SignupPage />
+        </AuthMiddleware>
+      ),
+    },
+    {
+      path: 'forget-password',
+      element: (
+        <AuthMiddleware>
+          <ForgetPasswordPage />
         </AuthMiddleware>
       ),
     },

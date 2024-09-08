@@ -1,11 +1,18 @@
-// import PropTypes from 'prop-types';
 import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
+import Tooltip from '@mui/material/Tooltip';
 import Grid from '@mui/material/Unstable_Grid2';
-import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Typography from '@mui/material/Typography';
+import ConnectIcon from '@mui/icons-material/Power';
+import DisconnectIcon from '@mui/icons-material/PowerOff';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { connectByIpAddress, disconnectByIpAddress, removeMachine } from 'src/api/machinesServices';
-// ----------------------------------------------------------------------
+import { useDrag } from 'react-dnd';
+
+const ItemTypes = {
+  MACHINE: 'machine',
+};
 
 MachineStatusCard.propTypes = {
   machine: PropTypes.object.isRequired,
@@ -14,42 +21,79 @@ MachineStatusCard.propTypes = {
   factoryIndex: PropTypes.number,
 };
 
-export default function MachineStatusCard(prop) {
-  const { machine, machineIndex, factoryIndex, setFactories } = prop;
-  const deleteMachine = async () => {
-    const disconnectRes = await disconnectByIpAddress(machine.machineIpAddress);
-    const deleteMachineRes = await removeMachine(machine.machineId);
-    deleteMachineFromState(factoryIndex, machineIndex);
+export default function MachineStatusCard({ machine, machineIndex, factoryIndex, setFactories }) {
+  const [{ isDragging }, drag] = useDrag({
+    type: ItemTypes.MACHINE,
+    item: { machineIndex, factoryIndex, machineId: machine.machineId },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
 
-  }
+  const handleConnect = () => {
+    connectByIpAddress(machine.machineIpAddress);
+  };
+
+  const handleDisconnect = () => {
+    disconnectByIpAddress(machine.machineIpAddress);
+  };
+
+  const handleDelete = async () => {
+    await disconnectByIpAddress(machine.machineIpAddress);
+    await removeMachine(machine.machineId);
+    deleteMachineFromState(factoryIndex, machineIndex);
+  };
 
   const deleteMachineFromState = (factoryIndex, machineIndex) => {
     setFactories((prevFactories) => {
       const updatedFactories = [...prevFactories];
       const targetFactory = { ...updatedFactories[factoryIndex] };
-      const updatedMachines = targetFactory.machines.filter((_, index) => index !== machineIndex);
-
-      targetFactory.machines = updatedMachines;
+      targetFactory.machines = targetFactory.machines.filter(
+        (m) => m.machineIndex !== machineIndex
+      );
       updatedFactories[factoryIndex] = targetFactory;
       return updatedFactories;
     });
   };
 
   return (
-    <Grid xs={12} sm={4}>
-      <Card>
-        <Box sx={{p: (theme) => theme.spacing(4, 3, 3, 3)}}> {machine.machineName} </Box>
-        <Box sx={{p: (theme) => theme.spacing(4, 3, 3, 3)}}> {machine.machineIpAddress} </Box>
-        <Box sx={{p: (theme) => theme.spacing(4, 3, 3, 3)}}> 
-          <Button variant="text" color="primary" onClick={() => connectByIpAddress(machine.machineIpAddress)}>連線</Button>
-          <Button variant="text" color="warning" onClick={() => disconnectByIpAddress(machine.machineIpAddress)}>斷線</Button>
+    <div>
+      <Tooltip 
+        title={
+          <Box>
+            <div>Name: {machine.machineName}</div>
+            <div>IP: {machine.machineIpAddress}</div>
+          </Box>
+        }
+        arrow
+      >
+        <Box
+          ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}
+          sx={{
+            border: '1px solid',
+            borderColor: 'success.lighter',
+            backgroundColor: 'success.lighter',
+            height: '150px',
+            width: '100%',
+            borderRadius: '8px',
+            color: 'grey.500',
+            display: 'grid',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <Typography>{machine.machineName}</Typography>
+          <IconButton onClick={handleConnect} aria-label="Connect">
+            <ConnectIcon />
+          </IconButton>
+          <IconButton onClick={handleDisconnect} aria-label="Disconnect">
+            <DisconnectIcon />
+          </IconButton>
+          <IconButton onClick={handleDelete} aria-label="Delete">
+            <DeleteIcon />
+          </IconButton>
         </Box>
-        <Box sx={{p: (theme) => theme.spacing(4, 3, 3, 3)}}> 
-          <Button variant="text" color="error" onClick={deleteMachine}>移除</Button>
-        </Box>
-      </Card>
-    </Grid>
+      </Tooltip>
+    </div>
   );
 }
-
-

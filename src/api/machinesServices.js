@@ -122,3 +122,17 @@ export const removeFactory = async (factoryId) => {
     throw error;
   }
 };
+
+export const updateMachineIndex = async (updateMachineReq) => {
+  const { machineId, machineIndex } = updateMachineReq;
+  try {
+    const response = await axios.patch(`${BACKEND_URL}/machines/update-index/${machineId}/${machineIndex}`,{}, {
+      headers: getAuthHeaders(),
+    });
+    const data = response.data;
+    return data;
+  } catch (error) {
+    console.error('Error updating machine index:', error);
+    throw error;
+  }
+}  

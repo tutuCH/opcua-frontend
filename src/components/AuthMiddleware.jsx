@@ -5,22 +5,21 @@ const AuthMiddleware = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const token = localStorage.getItem('access_token');
+  const NO_AUTH_PATHS = ['/login', '/signup', '/forget-password'];
 
   useEffect(() => {
-    console.log('Checking token...');
+    const isPathNoAuth = NO_AUTH_PATHS.includes(location.pathname);
+    
     if (token) {
-      console.log('Token exists');
-      if (location.pathname === '/login') {
-        console.log('Redirecting to home');
+      if (isPathNoAuth) {
         navigate('/', { replace: true });
       }
     } else {
-      console.log('No token found, redirecting to login');
-      if (location.pathname !== '/login') {
+      if (!isPathNoAuth) {
         navigate('/login', { replace: true });
       }
     }
-  }, [navigate, location, token]);
+  }, [navigate, location.pathname, token]);
 
   return children;
 };

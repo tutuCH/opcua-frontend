@@ -47,7 +47,7 @@ export default function MachineDialog(props) {
     // Clear the text fields
     setIpAddress('');
     setMachineName('');
-    // handleClose();
+    handleClose();
   }
 
   const submitConnection = async (event) => {
@@ -73,12 +73,13 @@ export default function MachineDialog(props) {
   return (
     <React.Fragment>
       <Dialog
-        open={open}
+        open={open || false}
         onClose={handleClose}
         PaperProps={{
           component: 'form',
           onSubmit: (event) => {submitConnection(event)},
         }}
+        aria-modal="true" // Add aria-modal attribute
       >
         <DialogTitle>Subscribe</DialogTitle>
         <DialogContent>
@@ -111,8 +112,8 @@ export default function MachineDialog(props) {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button type="submit">Subscribe</Button>
+          <Button onClick={handleClose} aria-modal="true">Cancel</Button> // Add aria-modal attribute
+          <Button type="submit" aria-modal="true">Subscribe</Button> // Add aria-modal attribute
         </DialogActions>
       </Dialog>
     </React.Fragment>
