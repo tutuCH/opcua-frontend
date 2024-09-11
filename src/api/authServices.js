@@ -33,26 +33,35 @@ export const userLogin = async (email, password) => {
 export const userSignup = async (email, password, username) => {
   try {
     // Send the signup request to the backend
-    const response = await axios.post(`${BACKEND_URL}/auth/signup`, {
+    const response = await axios.post(`${BACKEND_URL}/auth/sign-up`, {
       email: email,
       password: password,
       username: username
     });
-    console.log('success: ', JSON.stringify(response.data));
     // Assuming the response contains an access_token after signup
-    const { access_token } = response.data;
+    const { status, message } = response.data;
+    return {status, message};
 
-    // Calculate the expiration date (30 days from now)
+  } catch (error) {
+    return axiosErrorHandler(error);
+  }
+};
+
+export const userVerifyEmail = async (token) => {
+  try {
+    // Send the signup request to the backend
+    const response = await axios.get(`${BACKEND_URL}/auth/verify-email?token=${token}`, {
+    });
+    // Assuming the response contains an access_token after signup
+    const { userId, access_token, status, message } = response.data;
     const expirationDate = new Date();
     expirationDate.setDate(expirationDate.getDate() + 30);
 
     // Store the token and its expiration in localStorage
     localStorage.setItem('access_token', access_token);
-    localStorage.setItem('token_expiration', expirationDate.toISOString());
-
-    // Optionally, you can return the token or some other response data if needed
-    console.log('access_token:', access_token);
-    return access_token;
+    localStorage.setItem('user_id', userId);
+    localStorage.setItem('token_expiration', expirationDate.toISOString());    
+    return { userId, access_token, status, message };
 
   } catch (error) {
     return axiosErrorHandler(error);

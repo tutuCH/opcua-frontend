@@ -1,9 +1,10 @@
 import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
 import Tooltip from '@mui/material/Tooltip';
-import Grid from '@mui/material/Unstable_Grid2';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+import Divider from '@mui/material/Divider';
 import ConnectIcon from '@mui/icons-material/Power';
 import DisconnectIcon from '@mui/icons-material/PowerOff';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -58,7 +59,7 @@ export default function MachineStatusCard({ machine, machineIndex, factoryIndex,
 
   return (
     <div>
-      <Tooltip 
+      <Tooltip
         title={
           <Box>
             <div>Name: {machine.machineName}</div>
@@ -68,7 +69,8 @@ export default function MachineStatusCard({ machine, machineIndex, factoryIndex,
         arrow
       >
         <Box
-          ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}
+          ref={drag}
+          style={{ opacity: isDragging ? 0.5 : 1 }}
           sx={{
             border: '1px solid',
             borderColor: 'success.lighter',
@@ -83,7 +85,18 @@ export default function MachineStatusCard({ machine, machineIndex, factoryIndex,
           }}
         >
           <Typography>{machine.machineName}</Typography>
-          <IconButton onClick={handleConnect} aria-label="Connect">
+          <Stack direction="row" divider={<Divider orientation="vertical" flexItem />}>
+            <IconButton size="small" onClick={handleConnect} aria-label="Connect">
+              <ConnectIcon />
+            </IconButton>
+            <IconButton size="small" onClick={handleDisconnect} aria-label="Disconnect">
+              <DisconnectIcon />
+            </IconButton>
+            <IconButton size="small" onClick={handleDelete} aria-label="Delete">
+              <DeleteIcon />
+            </IconButton>
+          </Stack>
+          {/* <IconButton onClick={handleConnect} aria-label="Connect">
             <ConnectIcon />
           </IconButton>
           <IconButton onClick={handleDisconnect} aria-label="Disconnect">
@@ -91,7 +104,7 @@ export default function MachineStatusCard({ machine, machineIndex, factoryIndex,
           </IconButton>
           <IconButton onClick={handleDelete} aria-label="Delete">
             <DeleteIcon />
-          </IconButton>
+          </IconButton> */}
         </Box>
       </Tooltip>
     </div>

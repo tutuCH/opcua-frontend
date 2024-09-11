@@ -28,7 +28,7 @@ export default function ForgetPasswordView() {
   };
   const [email, setEmail] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
-  const [pageState, setPageState] = useState(PAGE_STATUS.RESET_PASSWORD_FAIL);
+  const [pageState, setPageState] = useState();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);

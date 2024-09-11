@@ -92,14 +92,37 @@ export const removeMachine = async (machineId) => {
 };
 
 export const createFactory = async (updateMachineReq) => {
-  const { factoryName, userId, factoryIndex } = updateMachineReq;
+  const { factoryName, userId, factoryIndex, width, height } = updateMachineReq;
   try {
     const requestBody = {
       factoryName,
       userId,
       factoryIndex,
+      width,
+      height,
     };
     const response = await axios.post(`${BACKEND_URL}/factories`, requestBody, {
+      headers: getAuthHeaders(),
+    });
+    const data = response.data;
+    return data;
+  } catch (error) {
+    console.error('Error creating factory:', error);
+    throw error;
+  }
+};
+
+export const updateFactory = async (updateFactoryReq) => {
+  const { factoryName, userId, factoryIndex, width, height, factoryId } = updateFactoryReq;
+  try {
+    const requestBody = {
+      factoryName,
+      userId,
+      factoryIndex,
+      width,
+      height,
+    };
+    const response = await axios.patch(`${BACKEND_URL}/factories/${factoryId}`, requestBody, {
       headers: getAuthHeaders(),
     });
     const data = response.data;

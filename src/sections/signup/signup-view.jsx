@@ -1,34 +1,44 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
+import TextField from '@mui/material/TextField';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { alpha, useTheme } from '@mui/material/styles';
-import InputAdornment from '@mui/material/InputAdornment';
-
-import { useRouter } from 'src/routes/hooks';
-import { userSignup } from 'src/api/authServices'; // Assuming there is a signup function
 import { bgGradient } from 'src/theme/css';
-
+import { userSignup, userVerifyEmail } from 'src/api/authServices'; // Assuming there is a signup function
 import Logo from 'src/components/logo';
-import Iconify from 'src/components/iconify';
 
 export default function SignupView() {
   const theme = useTheme();
-  const router = useRouter();
-
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  const PAGE_STATUS = {
+    SIGN_UP: 1,
+    SIGN_UP_SUCCESS: 2,
+    SIGN_UP_FAIL: 3,
+    VERIFY_EMAIL: 4,
+    VERIFY_EMAIL_SUCCESS: 5,
+    VERIFY_EMAIL_FAIL: 6,
+  };
+  const [pageState, setPageState] = useState(PAGE_STATUS.SIGN_UP); // Set initial state
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      // Token found, move to verify email state
+      setPageState(PAGE_STATUS.VERIFY_EMAIL);
+      handleVerifyEmail(token);
+    }
+  }, [searchParams]);
 
   const handleClick = async () => {
     if (password !== confirmPassword) {
@@ -38,10 +48,9 @@ export default function SignupView() {
 
     setLoading(true);
     try {
-      const token = await userSignup(email, password, companyName); // Replace with signup function
-      if (token) {
-        // Redirect to the dashboard or home page after successful signup
-        router.push('/');
+      const { status, message } = await userSignup(email, password, companyName);
+      if (status === 'success') {
+        setPageState(PAGE_STATUS.SIGN_UP_SUCCESS);
       } else {
         alert('Signup failed. Please try again.');
       }
@@ -52,9 +61,80 @@ export default function SignupView() {
     }
   };
 
+  const handleVerifyEmail = async (token) => {
+    try {
+      const { status } = await userVerifyEmail(token);
+      if (status === 'success') {
+        setPageState(PAGE_STATUS.VERIFY_EMAIL_SUCCESS);
+        setTimeout(() => {
+          navigate('/');
+        }, 2000); // Redirect after 2 seconds
+      } else {
+        setPageState(PAGE_STATUS.VERIFY_EMAIL_FAIL);
+      }
+    } catch (error) {
+      setPageState(PAGE_STATUS.VERIFY_EMAIL_FAIL);
+    }
+  };
+
+  // Informational card for SIGN_UP_SUCCESS
+  const signUpSuccessCard = (
+    <Card
+      sx={{
+        p: 5,
+        width: 1,
+        maxWidth: 420,
+      }}
+    >
+      <Typography variant="h4">Sign-Up Successful!</Typography>
+      <Typography variant="body1" sx={{ mt: 2 }}>
+        Please check your email and click the verification link to activate your account.
+      </Typography>
+    </Card>
+  );
+
+  // Informational card for VERIFY_EMAIL
+  const verifyEmailCard = (
+    <Card
+      sx={{
+        p: 5,
+        width: 1,
+        maxWidth: 420,
+      }}
+    >
+      <Typography variant="h4">Verifying Your Email...</Typography>
+      <Typography variant="body1" sx={{ mt: 2 }}>
+        Please wait while we verify your email.
+      </Typography>
+    </Card>
+  );
+
+  // Informational card for VERIFY_EMAIL_SUCCESS
+  const verifyEmailSuccessCard = (
+    <Card
+      sx={{
+        p: 5,
+        width: 1,
+        maxWidth: 420,
+      }}
+    >
+      <Typography variant="h4">Email Verified!</Typography>
+      <Typography variant="body1" sx={{ mt: 2 }}>
+        Your email has been successfully verified. Redirecting you to the homepage...
+      </Typography>
+    </Card>
+  );
+
   const renderForm = (
-    <>
-      <Stack spacing={3} sx={{margin: "2rem 0"}}>
+    <Card
+      sx={{
+        p: 5,
+        width: 1,
+        maxWidth: 420,
+      }}
+    >
+      <Typography variant="h4">Create an Account</Typography>
+      <Stack spacing={3} sx={{ margin: "2rem 0" }}>
         <TextField
           name="email"
           label="Email address"
@@ -64,47 +144,26 @@ export default function SignupView() {
         />
         <TextField
           name="companyName"
-          label="公司名稱"
+          label="Company Name"
           value={companyName}
           type="text"
           onChange={(e) => setCompanyName(e.target.value)}
         />
-
         <TextField
           name="password"
           label="Password"
           type={showPassword ? 'text' : 'password'}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                  <Iconify icon={showPassword ? 'eva:eye-fill' : 'eva:eye-off-fill'} />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
         />
-
         <TextField
           name="confirmPassword"
           label="Confirm Password"
           type={showPassword ? 'text' : 'password'}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                  <Iconify icon={showPassword ? 'eva:eye-fill' : 'eva:eye-off-fill'} />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
         />
       </Stack>
-
       <LoadingButton
         fullWidth
         size="large"
@@ -116,7 +175,7 @@ export default function SignupView() {
       >
         Sign Up
       </LoadingButton>
-    </>
+    </Card>
   );
 
   return (
@@ -138,17 +197,10 @@ export default function SignupView() {
       />
 
       <Stack alignItems="center" justifyContent="center" sx={{ height: 1 }}>
-        <Card
-          sx={{
-            p: 5,
-            width: 1,
-            maxWidth: 420,
-          }}
-        >
-          <Typography variant="h4">Create an Account</Typography>
-
-          {renderForm}
-        </Card>
+        {pageState === PAGE_STATUS.SIGN_UP && renderForm}
+        {pageState === PAGE_STATUS.SIGN_UP_SUCCESS && signUpSuccessCard}
+        {pageState === PAGE_STATUS.VERIFY_EMAIL && verifyEmailCard}
+        {pageState === PAGE_STATUS.VERIFY_EMAIL_SUCCESS && verifyEmailSuccessCard}
       </Stack>
     </Box>
   );

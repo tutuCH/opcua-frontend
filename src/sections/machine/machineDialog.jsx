@@ -21,11 +21,10 @@ export default function MachineDialog(props) {
   const { open, handleClose, factory, factoryIndex, setFactories } = props;
   const [ipAddress, setIpAddress] = React.useState('');
   const [machineName, setMachineName] = React.useState('');
-
+  const userId = localStorage.getItem('user_id');
   const handleEstablishConnection = async (ipAddress, machineName) => {
     const connectByIpAddressRes = await connectByIpAddress(ipAddress);
     const machineIndex = factory.machines?.length;
-    let userId = 1; // hard coded for now
     const factoryId = factory.factoryId;
     const insertMachineRes = await insertMachine({
       machineIpAddress: ipAddress, 
@@ -112,8 +111,8 @@ export default function MachineDialog(props) {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} aria-modal="true">Cancel</Button> // Add aria-modal attribute
-          <Button type="submit" aria-modal="true">Subscribe</Button> // Add aria-modal attribute
+          <Button onClick={handleClose} aria-modal="true">Cancel</Button>
+          <Button type="submit" aria-modal="true">Subscribe</Button>
         </DialogActions>
       </Dialog>
     </React.Fragment>

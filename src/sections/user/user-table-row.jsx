@@ -59,7 +59,7 @@ export default function UserTableRow({
         <TableCell align="center">{isVerified ? 'Yes' : 'No'}</TableCell>
 
         <TableCell>
-          <Label color={(status === 'banned' && 'error') || 'success'}>{status}</Label>
+          {/* <Label color={(status === 'banned' && 'error') || 'success'}>{status}</Label> */}
         </TableCell>
 
         <TableCell align="right">
@@ -75,9 +75,10 @@ export default function UserTableRow({
         onClose={handleCloseMenu}
         anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{
-          sx: { width: 140 },
-        }}
+        slotProps={{ paper: { sx: { width: 140 } } }}
+        // PaperProps={{
+        //   sx: { width: 140 },
+        // }}
       >
         <MenuItem onClick={handleCloseMenu}>
           <Iconify icon="eva:edit-fill" sx={{ mr: 2 }} />

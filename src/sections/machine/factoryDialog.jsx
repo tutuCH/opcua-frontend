@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -7,7 +7,8 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import { createFactory } from 'src/api/machinesServices';
+import Box from '@mui/material/Box';
+import { createFactory, updateFactory } from 'src/api/machinesServices';
 
 FactoryDialog.propTypes = {
   open: PropTypes.bool,
@@ -15,41 +16,100 @@ FactoryDialog.propTypes = {
   factory: PropTypes.object,
   factoryIndex: PropTypes.number,
   setFactories: PropTypes.func,
+  isEditMode: PropTypes.bool,
+  setIsEdit: PropTypes.func,
+  setFactoryDialogState: PropTypes.func,
+  setMachineDialogState: PropTypes.func,
 };
 
 export default function FactoryDialog(props) {
-  const { open, handleClose, factoryIndex, setFactories } = props;
-  const [factoryName, setFactoryName] = React.useState('');
+  const { open, handleClose, factoryIndex, isEditMode, factories, setFactories, setIsEdit, setFactoryDialogState, setMachineDialogState } = props;
+  const [factoryName, setFactoryName] = useState('');
+  const [width, setWidth] = useState('');
+  const [height, setHeight] = useState('');
+  const userId = localStorage.getItem('user_id');
 
-  const handleCreateFactory = async (factoryName) => {
-    let userId = 1; // hard coded for now
-    const createNewFactoryRes = await createFactory({ factoryName, userId, factoryIndex });
+  // Use effect to set values when isEditMode or factoryIndex changes
+  useEffect(() => {
+    if (isEditMode && factories[factoryIndex]) {
+      setFactoryName(factories[factoryIndex].factoryName);
+      setWidth(factories[factoryIndex].factoryWidth);
+      setHeight(factories[factoryIndex].factoryHeight);
+    } else {
+      // Reset values for the create factory mode
+      setFactoryName('');
+      setWidth('');
+      setHeight('');
+    }
+  }, [isEditMode, factoryIndex, factories]); // Add dependencies for re-rendering when values change
+
+  const handleCreateFactory = async (factoryName, width, height) => {
+    const createNewFactoryRes = await createFactory({ factoryName, userId, factoryIndex: factories.length, width, height });
     const factoryId = createNewFactoryRes.factoryId;
     const machines = [];
-    insertFactoryToState(factoryIndex, {
+    const newFactory = {
       factoryName,
       userId,
       factoryId,
-      factoryIndex,
+      factoryIndex: factories.length,
       machines,
-    });
-    // Clear the text fields
+      factoryWidth: width,
+      factoryHeight: height,
+    };
+    insertFactoryToState(factories.length, newFactory);
+    setFactoryDialogState((prevFactoryDialogState) => [...prevFactoryDialogState, false]);
+  
+    // Reset form values
     setFactoryName('');
-    // Close the dialog after submission
+    setWidth('');
+    setHeight('');
     handleClose();
+  };
+  
+  
+
+  const insertFactoryToState = (factoryIndex, factory) => {
+    setFactories((prevFactories) => [...prevFactories, factory]);
+    setMachineDialogState((prevMachineDialogState) => [...prevMachineDialogState, false]);
   };
 
   const submitConnection = async (event) => {
     event.preventDefault();
-    handleCreateFactory(factoryName);
+    if (isEditMode) {
+      await handleUpdateFactory(factoryName, width, height);
+    } else {
+      await handleCreateFactory(factoryName, width, height);
+    }
   };
 
-  const insertFactoryToState = (factoryIndex, factory) => {
-    setFactories((prevFactories) => [...prevFactories, factory]);
+  const handleUpdateFactory = async (factoryName, width, height) => {
+    const factoryId = factories[factoryIndex].factoryId;
+    const updateNewFactoryRes = await updateFactory({ factoryName, userId, factoryIndex, width, height, factoryId });
+    updateFactoryInState(updateNewFactoryRes);
+    setFactoryName('');
+    setWidth('');
+    setHeight('');
+    setIsEdit(false);
+    handleClose();
+  };
+
+  const updateFactoryInState = (updatedFactory) => {
+    setFactories((prevFactories) =>
+      prevFactories.map((factory) =>
+        factory.factoryId === updatedFactory.factoryId
+          ? {
+              ...factory,
+              factoryName: updatedFactory.factoryName,
+              factoryWidth: updatedFactory.width,
+              factoryHeight: updatedFactory.height,
+            }
+          : factory
+      )
+    );
   };
 
   return (
-    <React.Fragment>
+    <>
       <Dialog
         open={open}
         onClose={handleClose}
@@ -59,32 +119,62 @@ export default function FactoryDialog(props) {
         }}
         aria-labelledby="factory-dialog-title"
       >
-        <DialogTitle id="factory-dialog-title">Create New Factory</DialogTitle>
+        <DialogTitle id="factory-dialog-title">
+          {isEditMode ? "編輯工廠" : "新增工廠"}
+        </DialogTitle>
         <DialogContent>
           <DialogContentText>
-            To create a new factory, please enter the factory name here.
+            To {isEditMode ? "edit" : "create"} a factory, please enter the factory name, width, and height here.
           </DialogContentText>
           <TextField
             autoFocus
             required
             margin="dense"
             id="factoryName"
-            label="Factory Name"
+            label="工廠名稱"
             fullWidth
             variant="standard"
             value={factoryName}
             onChange={(e) => setFactoryName(e.target.value)}
           />
+          
+          {/* Row with two fields: Width and Height */}
+          <Box display="flex" justifyContent="space-between" gap={2} sx={{ mt: 2 }}>
+            <TextField
+              required
+              margin="dense"
+              id="factoryWidth"
+              label="寬"
+              variant="standard"
+              value={width}
+              onChange={(e) => setWidth(e.target.value)}
+              type="number"
+              slotProps={{ htmlInput: {min: 0} }}
+              fullWidth
+            />
+            <TextField
+              required
+              margin="dense"
+              id="factoryHeight"
+              label="長"
+              variant="standard"
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
+              type="number"
+              slotProps={{ htmlInput: {min: 0} }}
+              fullWidth
+            />
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} aria-hidden="false" aria-modal="true">
             Cancel
           </Button>
           <Button type="submit" aria-hidden="false" aria-modal="true">
-            Submit
+            {isEditMode ? "Update" : "Submit"}
           </Button>
         </DialogActions>
       </Dialog>
-    </React.Fragment>
+    </>
   );
 }
