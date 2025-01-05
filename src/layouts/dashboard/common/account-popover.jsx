@@ -10,19 +10,19 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 
 import { useRouter } from 'src/routes/hooks';
-import { account } from 'src/_mock/account';
+// import { account } from 'src/_mock/account';
 
 // ----------------------------------------------------------------------
 
 const MENU_OPTIONS = [
-  {
-    label: 'Home',
-    icon: 'eva:home-fill',
-  },
-  {
-    label: 'Profile',
-    icon: 'eva:person-fill',
-  },
+  // {
+  //   label: 'Home',
+  //   icon: 'eva:home-fill',
+  // },
+  // {
+  //   label: 'Profile',
+  //   icon: 'eva:person-fill',
+  // },
   {
     label: 'Settings',
     icon: 'eva:settings-2-fill',
@@ -41,6 +41,29 @@ export default function AccountPopover() {
 
   const handleClose = () => {
     setOpen(null);
+  };
+
+  const account = {
+    displayName: localStorage.getItem('username'),
+    email: localStorage.getItem('email'),
+    photoURL: '/assets/images/avatars/avatar_25.jpg',
+  };
+
+  const handleSelectPopover = (label) => {
+    switch (label) {
+      // case 'Home':
+      //   router.push('/app');
+      //   break;
+      // case 'Profile':
+      //   router.push('/profile');
+      //   break;
+      case 'Settings':
+        router.push('/settings');
+        break;
+      default:
+        break;
+    }
+    handleClose();
   };
 
   const handleLogout = () => {
@@ -72,7 +95,7 @@ export default function AccountPopover() {
             border: (theme) => `solid 2px ${theme.palette.background.default}`,
           }}
         >
-          {account.displayName.charAt(0).toUpperCase()}
+          {account.displayName?.charAt(0).toUpperCase()}
         </Avatar>
       </IconButton>
 
@@ -100,10 +123,10 @@ export default function AccountPopover() {
           </Typography>
         </Box>
 
-        <Divider sx={{ borderStyle: 'dashed' }} />
+        <Divider sx={{ borderStyle: 'dashed', my: 1 }} />
 
         {MENU_OPTIONS.map((option) => (
-          <MenuItem key={option.label} onClick={handleClose}>
+          <MenuItem key={option.label} onClick={() => handleSelectPopover(option.label)}>
             {option.label}
           </MenuItem>
         ))}

@@ -1,23 +1,25 @@
-import Paper from '@mui/material/Paper';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
 import AddIcon from '@mui/icons-material/Add';
-import MachineStatusCard from './MachineStatusCard';
-import MachineDialog from './machineDialog';
-import FactoryDialog from './factoryDialog';
 import { useEffect, useState } from 'react';
-import { getFactoriesMachinesByUserId } from 'src/api/machinesServices';
-import { updateMachineIndex, removeFactory } from '../../api/machinesServices';
+import {
+  getFactoriesMachinesByUserId,
+  updateMachineIndex,
+  removeFactory,
+} from 'src/api/machinesServices';
 import { DndProvider, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import Iconify from 'src/components/iconify/iconify';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
-import Divider from '@mui/material/Divider';
+import { Button } from '@/components/ui/button';
+import FactoryDialog from './factoryDialog';
+import MachineDialog from './machineDialog';
+import MachineStatusCard from './machineStatusCard';
+import { Card } from '@/components/ui/card';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 export default function Factory() {
   const [factories, setFactories] = useState([]);
+  const [selectedAddMachineIndex, setSelectedAddMachineIndex] = useState(null);
   const [machineDialogState, setMachineDialogState] = useState([]);
   const [factoryDialogState, setFactoryDialogState] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
@@ -26,38 +28,30 @@ export default function Factory() {
     MACHINE: 'machine',
   };
 
+  useEffect(() => {}, [machineDialogState]);
+
   useEffect(() => {
-    console.log('after machineDialogState: ' + JSON.stringify(machineDialogState));
-  }, [machineDialogState]);
-  useEffect(() => {
+    const getFactoriesMachines = async () => {
+      const data = await getFactoriesMachinesByUserId(userId);
+      setFactories(data);
+      setMachineDialogState(new Array(data.length).fill(false));
+      setFactoryDialogState(new Array(data.length).fill(false));
+    };
+
     getFactoriesMachines();
-  }, []);
+  }, [userId]);
 
-  const getFactoriesMachines = async () => {
-    const data = await getFactoriesMachinesByUserId(userId);
-    setFactories(data);
-    setMachineDialogState(new Array(data.length).fill(false));
-    setFactoryDialogState(new Array(data.length).fill(false));
-  };
-
-  const handleAddMachine = (index) => {
-    console.log(`before: ${JSON.stringify(machineDialogState)}`);
-    setMachineDialogState(machineDialogState.map((open, i) => (i === index ? true : open)));
+  const handleAddMachine = (factoryIndex, index) => {
+    setMachineDialogState(machineDialogState.map((open, i) => (i === factoryIndex ? true : open)));
+    console.log(`index: ${index}`);
+    setSelectedAddMachineIndex(index);
   };
 
   const handleCloseMachineDialog = (index) => {
     setMachineDialogState(machineDialogState.map((open, i) => (i === index ? false : open)));
+    setSelectedAddMachineIndex(null);
   };
 
-  // const handleAddFactory = async () => {
-  //   if (factories.length === 0) {
-  //     setFactoryDialogState([true]);
-  //   } else {
-  //     setFactoryDialogState(
-  //       factoryDialogState.map((open, i) => (i === factories.length - 1 ? true : open))
-  //     );
-  //   }
-  // };
   const handleAddFactory = async () => {
     setIsEdit(false);
     setFactoryDialogState(
@@ -134,111 +128,100 @@ export default function Factory() {
     setFactoryDialogState(factoryDialogState.map((open, i) => (i === index ? true : open)));
   };
 
+  const FactoryScrollArea = ({ factory, factoryIndex }) => {
+    return (
+      <Card className="mt-4 p-6">
+        <ScrollArea className="w-full">
+          <div className="grid gap-4 mb-6" 
+          style={{
+            gridTemplateColumns: `repeat(${factory.factoryWidth}, 1fr)`,
+            minWidth: 'min-content'
+          }}
+          >
+            {Array.from({ length: factory.factoryWidth * factory.factoryHeight }).map(
+              (_, index) => {
+                const matchingMachine = factory.machines?.find(
+                  (machine) => machine.machineIndex === index
+                );
+                return (
+                  <div key={index} className="min-w-32">
+                    {matchingMachine ? (
+                      <MachineStatusCard
+                        key={matchingMachine.machineId}
+                        machineIndex={matchingMachine.machineIndex}
+                        machine={matchingMachine}
+                        setFactories={setFactories}
+                        factoryIndex={factoryIndex}
+                      />
+                    ) : (
+                      <DropTarget
+                        index={index}
+                        onDrop={(item) => handleDropMachine(item, index)}
+                        className="rounded-sm"
+                      >
+                        <Button
+                          variant="outline"
+                          className="h-40 w-full border-dashed border-gray-400 hover:bg-gray-100"
+                          onClick={() => handleAddMachine(factoryIndex, index)}
+                        >
+                          <AddIcon className="h-8 w-8 text-gray-500" />
+                        </Button>
+                      </DropTarget>
+                    )}
+                  </div>
+                );
+              }
+            )}
+          </div>
+
+          {factory.machines?.length === 0 && (
+            <Button
+              variant="destructive"
+              className="w-auto"
+              onClick={() => removeCurrentFactory(factory.factoryId, factoryIndex)}
+            >
+              <Iconify icon="eva:trash-2-outline" className="mr-2" />
+              刪除廠區
+            </Button>
+          )}
+
+          <MachineDialog
+            open={machineDialogState[factoryIndex]}
+            handleClose={() => handleCloseMachineDialog(factoryIndex)}
+            factory={factory}
+            factoryIndex={factoryIndex}
+            setFactories={setFactories}
+            machineIndex={selectedAddMachineIndex}
+          />
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      </Card>
+    );
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
-      <Box sx={{ width: '100%' }}>
-        {factories.map((factory, factoryIndex) => {
-          return (
-            <div key={factoryIndex}>
-              <Box sx={{ margin: '2rem 0' }} >
-                <Box display="flex" justifyContent="space-between" alignItems="center">
-                  <Typography variant="h5">{factory.factoryName}</Typography>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleEditFactory(factoryIndex)}
-                    aria-label="Edit"
-                  >
-                    <EditIcon />
-                  </IconButton>
-                </Box>
-
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 3,
-                    overflowX: 'auto', // Enable horizontal scroll if needed
-                    marginTop: 2,
-                  }}
+      <div className="w-full">
+        {factories.map((factory, factoryIndex) => (
+          <div key={factoryIndex}>
+            <div className="my-8">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">{factory.factoryName}</h2>
+                <IconButton
+                  size="small"
+                  onClick={() => handleEditFactory(factoryIndex)}
+                  aria-label="Edit"
                 >
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: `repeat(${factory.factoryWidth}, minmax(120px, 1fr))`, // Create columns based on factoryWidth with a minimum width of 120px
-                      gap: 2,
-                      marginBottom: 3,
-                    }}
-                  >
-                    {Array.from({ length: factory.factoryWidth * factory.factoryHeight }).map(
-                      (_, index) => {
-                        const matchingMachine = factory.machines?.find(
-                          (machine) => machine.machineIndex === index
-                        );
-                        return (
-                          <Box key={index}>
-                            {matchingMachine ? (
-                              <MachineStatusCard
-                                key={matchingMachine.machineId}
-                                machineIndex={matchingMachine.machineIndex}
-                                machine={matchingMachine}
-                                setFactories={setFactories}
-                                factoryIndex={factoryIndex}
-                              />
-                            ) : (
-                              <DropTarget
-                                index={index}
-                                onDrop={(item) => handleDropMachine(item, index)}
-                              >
-                                <Button
-                                  sx={{
-                                    border: '2px dotted',
-                                    borderColor: 'grey.400',
-                                    backgroundColor: 'transparent',
-                                    height: '150px',
-                                    width: '100%',
-                                    color: 'grey.500',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    '&:hover': {
-                                      backgroundColor: 'grey.100',
-                                    },
-                                  }}
-                                  onClick={() => handleAddMachine(factoryIndex)}
-                                >
-                                  <AddIcon sx={{ fontSize: '2rem' }} />
-                                </Button>
-                              </DropTarget>
-                            )}
-                          </Box>
-                        );
-                      }
-                    )}
-                  </Box>
-
-                  {factory.machines?.length === 0 && (
-                    <Button
-                      variant="contained"
-                      color="error"
-                      startIcon={<Iconify icon="eva:plus-fill" />}
-                      onClick={() => removeCurrentFactory(factory.factoryId, factoryIndex)}
-                    >
-                      刪除廠區
-                    </Button>
-                  )}
-
-                  <MachineDialog
-                    open={machineDialogState[factoryIndex]}
-                    handleClose={() => handleCloseMachineDialog(factoryIndex)}
-                    factory={factory}
-                    factoryIndex={factoryIndex}
-                    setFactories={setFactories}
-                  />
-                </Paper>
-              </Box>
-              <Divider />
+                  <EditIcon />
+                </IconButton>
+              </div>
+              <FactoryScrollArea factory={factory} factoryIndex={factoryIndex} />
             </div>
-          );
-        })}
+            <div className="border-t border-gray-200" />
+          </div>
+        ))}
+
+        {/* Factory Dialogs */}
         {factoryDialogState.map((factoryState, index) => (
           <FactoryDialog
             key={index}
@@ -253,19 +236,14 @@ export default function Factory() {
             setMachineDialogState={setMachineDialogState}
           />
         ))}
-        <Box sx={{ p: 3 }}>
-          <Button
-            aria-hidden="false"
-            aria-modal="true"
-            variant="contained"
-            color="inherit"
-            startIcon={<Iconify icon="eva:plus-fill" />}
-            onClick={handleAddFactory}
-          >
+
+        <div className="">
+          <Button className="w-full" onClick={handleAddFactory}>
+            <Iconify icon="eva:plus-fill" className="mr-2" />
             新廠區
           </Button>
-        </Box>
-      </Box>
+        </div>
+      </div>
     </DndProvider>
   );
 }

@@ -1,8 +1,5 @@
 import PropTypes from 'prop-types';
 import Box from '@mui/material/Box';
-import Tooltip from '@mui/material/Tooltip';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import ConnectIcon from '@mui/icons-material/Power';
@@ -10,6 +7,10 @@ import DisconnectIcon from '@mui/icons-material/PowerOff';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { connectByIpAddress, disconnectByIpAddress, removeMachine } from 'src/api/machinesServices';
 import { useDrag } from 'react-dnd';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+
 
 const ItemTypes = {
   MACHINE: 'machine',
@@ -59,54 +60,40 @@ export default function MachineStatusCard({ machine, machineIndex, factoryIndex,
 
   return (
     <div>
-      <Tooltip
-        title={
-          <Box>
-            <div>Name: {machine.machineName}</div>
-            <div>IP: {machine.machineIpAddress}</div>
-          </Box>
-        }
-        arrow
+      <TooltipProvider
+        delayDuration={100}
       >
-        <Box
-          ref={drag}
-          style={{ opacity: isDragging ? 0.5 : 1 }}
-          sx={{
-            border: '1px solid',
-            borderColor: 'success.lighter',
-            backgroundColor: 'success.lighter',
-            height: '150px',
-            width: '100%',
-            borderRadius: '8px',
-            color: 'grey.500',
-            display: 'grid',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        >
-          <Typography>{machine.machineName}</Typography>
-          <Stack direction="row" divider={<Divider orientation="vertical" flexItem />}>
-            <IconButton size="small" onClick={handleConnect} aria-label="Connect">
-              <ConnectIcon />
-            </IconButton>
-            <IconButton size="small" onClick={handleDisconnect} aria-label="Disconnect">
-              <DisconnectIcon />
-            </IconButton>
-            <IconButton size="small" onClick={handleDelete} aria-label="Delete">
-              <DeleteIcon />
-            </IconButton>
-          </Stack>
-          {/* <IconButton onClick={handleConnect} aria-label="Connect">
-            <ConnectIcon />
-          </IconButton>
-          <IconButton onClick={handleDisconnect} aria-label="Disconnect">
-            <DisconnectIcon />
-          </IconButton>
-          <IconButton onClick={handleDelete} aria-label="Delete">
-            <DeleteIcon />
-          </IconButton> */}
-        </Box>
-      </Tooltip>
+        <Tooltip>
+          <TooltipTrigger className='w-full'>
+            <Card
+              ref={drag}
+              className={`grid border border-dashed border-green-400 bg-green-100 h-40 rounded-md w-full justify-center items-center shadow-none ${isDragging ? 'opacity-50' : ''}`}
+            >
+              <p>{machine.machineName}</p>
+              <Stack direction="row" divider={<Divider orientation="vertical" flexItem />}>
+                {/* <IconButton size="small" onClick={handleConnect} aria-label="Connect">
+                  <ConnectIcon />
+                </IconButton> */}
+                <Button variant="ghost" className='p-0 rounded-full hover:bg-gray-200 hover:bg-opacity-50' size="icon" onClick={handleConnect} aria-label="Connect">
+                  <ConnectIcon className='text-gray-700 !w-5 !h-5'/>
+                </Button>
+                <Button variant="ghost" className='p-0 rounded-full hover:bg-gray-200 hover:bg-opacity-50' size="icon" onClick={handleDisconnect} aria-label="Disconnect">
+                  <DisconnectIcon className='text-gray-700 !w-5 !h-5'/>
+                </Button>
+                <Button variant="ghost" className='p-0 rounded-full hover:bg-gray-200 hover:bg-opacity-50' size="icon" onClick={handleDelete} aria-label="Delete">
+                  <DeleteIcon className='text-gray-700 !w-5 !h-5'/>
+                </Button>
+              </Stack>
+            </Card>
+          </TooltipTrigger>
+          <TooltipContent>
+            <Box>
+              <div>Name:   <span className='font-bold'>{machine.machineName}</span></div>
+              <div>IP:     <span className='font-bold'>{machine.machineIpAddress}</span></div>
+            </Box>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }

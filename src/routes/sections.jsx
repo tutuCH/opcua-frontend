@@ -11,6 +11,7 @@ export const MachinePage = lazy(() => import('src/pages/machine'));
 export const UserPage = lazy(() => import('src/pages/user'));
 export const LoginPage = lazy(() => import('src/pages/login'));
 export const SignupPage = lazy(() => import('src/pages/signup'));
+export const SettingsPage = lazy(() => import('src/pages/settings'));
 export const ForgetPasswordPage = lazy(() => import('src/pages/forgotPassword'));
 export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
@@ -35,6 +36,7 @@ export default function Router() {
         { path: 'products', element: <ProductsPage /> },
         { path: 'blog', element: <BlogPage /> },
         { path: 'machine', element: <MachinePage /> },
+        { path: 'settings', element: <SettingsPage /> },
       ],
     },
     {

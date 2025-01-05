@@ -18,17 +18,17 @@ export default function MachineView() {
         <Typography variant="h4">機台管理</Typography>
 
       </Stack>
-
+{/* 
       <Stack mb={5} direction="row" alignItems="center" justifyContent="space-between">
         <PostSearch posts={posts} />
-        {/* <PostSort
+        <PostSort
           options={[
             { value: 'latest', label: 'Latest' },
             { value: 'popular', label: 'Popular' },
             { value: 'oldest', label: 'Oldest' },
           ]}
-        /> */}
-      </Stack>
+        />
+      </Stack> */}
       <Grid container spacing={3}>
         <Factory/>
       </Grid>      

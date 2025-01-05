@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -12,20 +13,26 @@ import { connectByIpAddress, insertMachine } from 'src/api/machinesServices';
 MachineDialog.propTypes = {
   open: PropTypes.bool,
   handleClose: PropTypes.func,
+  machineIndex: PropTypes.number,
   factory: PropTypes.object,
   factoryIndex: PropTypes.number,
   setFactories: PropTypes.func,
 };
 
 export default function MachineDialog(props) {
-  const { open, handleClose, factory, factoryIndex, setFactories } = props;
+  const { open, handleClose, factory, factoryIndex, setFactories, machineIndex } = props;
   const [ipAddress, setIpAddress] = React.useState('');
   const [machineName, setMachineName] = React.useState('');
   const userId = localStorage.getItem('user_id');
-  const handleEstablishConnection = async (ipAddress, machineName) => {
+
+  useEffect(() => {
+    console.log(`machineIndex: ${machineIndex}`);
+  }, [machineIndex]);
+
+  const handleEstablishConnection = async (ipAddress, machineName, machineIndex) => {
     const connectByIpAddressRes = await connectByIpAddress(ipAddress);
-    const machineIndex = factory.machines?.length;
     const factoryId = factory.factoryId;
+    console.log(`machineIndex: ${machineIndex}`);
     const insertMachineRes = await insertMachine({
       machineIpAddress: ipAddress, 
       machineName, 
@@ -51,7 +58,7 @@ export default function MachineDialog(props) {
 
   const submitConnection = async (event) => {
     event.preventDefault();
-    handleEstablishConnection(ipAddress, machineName);
+    handleEstablishConnection(ipAddress, machineName, machineIndex);
   };
 
   const insertMachineToState = (factoryIndex, machine) => {
@@ -70,7 +77,7 @@ export default function MachineDialog(props) {
   };
 
   return (
-    <React.Fragment>
+    <>
       <Dialog
         open={open || false}
         onClose={handleClose}
@@ -115,6 +122,6 @@ export default function MachineDialog(props) {
           <Button type="submit" aria-modal="true">Subscribe</Button>
         </DialogActions>
       </Dialog>
-    </React.Fragment>
+    </>
   );
 }

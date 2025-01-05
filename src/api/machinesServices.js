@@ -67,6 +67,7 @@ export const insertMachine = async (createMachineReq) => {
       factoryId,
       factoryIndex,
     };
+    console.log(requestBody);
     const response = await axios.post(`${BACKEND_URL}/machines`, requestBody, {
       headers: getAuthHeaders(),
     });

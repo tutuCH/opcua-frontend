@@ -8,7 +8,7 @@ import TextField from '@mui/material/TextField';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { alpha, useTheme } from '@mui/material/styles';
 import { bgGradient } from 'src/theme/css';
-import { userSignup, userVerifyEmail } from 'src/api/authServices'; // Assuming there is a signup function
+import { userSignup, userVerifyEmail } from 'src/api/authServices';
 import Logo from 'src/components/logo';
 
 export default function SignupView() {
@@ -21,7 +21,7 @@ export default function SignupView() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const PAGE_STATUS = {
     SIGN_UP: 1,
     SIGN_UP_SUCCESS: 2,
@@ -90,6 +90,14 @@ export default function SignupView() {
       <Typography variant="body1" sx={{ mt: 2 }}>
         Please check your email and click the verification link to activate your account.
       </Typography>
+      <LoadingButton
+        variant="contained"
+        color="primary"
+        sx={{ mt: 3 }}
+        onClick={handleClick}
+      >
+        Resend Verification Email
+      </LoadingButton>
     </Card>
   );
 
@@ -134,7 +142,7 @@ export default function SignupView() {
       }}
     >
       <Typography variant="h4">Create an Account</Typography>
-      <Stack spacing={3} sx={{ margin: "2rem 0" }}>
+      <Stack spacing={3} sx={{ margin: '2rem 0' }}>
         <TextField
           name="email"
           label="Email address"

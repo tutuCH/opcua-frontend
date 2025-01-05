@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import * as ForgotPasswordStyles from './forgotPasswordStyles';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -13,6 +12,7 @@ import { useRouter } from 'src/routes/hooks';
 import { userForgetPassword, userResetPassword } from 'src/api/authServices';
 import { bgGradient } from 'src/theme/css';
 import Logo from 'src/components/logo';
+import * as ForgotPasswordStyles from './forgotPasswordStyles';
 
 export default function ForgetPasswordView() {
   const theme = useTheme();
@@ -41,7 +41,7 @@ export default function ForgetPasswordView() {
     } else {
       setPageState(PAGE_STATUS.FORGET_PASSWORD);
     }
-  }, [searchParams]);
+  }, [PAGE_STATUS.FORGET_PASSWORD, PAGE_STATUS.RESET_PASSWORD, searchParams]);
 
 
   const handleClickForgetPassword = async () => {
@@ -64,8 +64,7 @@ export default function ForgetPasswordView() {
     <Card sx={ForgotPasswordStyles.cardContainer}>
       <Typography variant="h4">Enter your email</Typography>
       <Typography variant="body2">
-        Please enter your email address below. We will send you an email with a link to reset your
-        password.
+        Please enter your email address below. We will send you an email with a link to reset your password.
       </Typography>
       <Stack spacing={3} sx={{ my: 3 }}>
         <TextField
@@ -74,7 +73,7 @@ export default function ForgetPasswordView() {
           value={email}
           type="email"
           onChange={(e) => setEmail(e.target.value)}
-          error={pageState === PAGE_STATUS.FORGET_PASSWORD_FAIL} // Conditional error
+          error={pageState === PAGE_STATUS.FORGET_PASSWORD_FAIL}
           helperText={
             pageState === PAGE_STATUS.FORGET_PASSWORD_FAIL
               ? 'Failed to send reset email. Please try again.'
@@ -103,16 +102,18 @@ export default function ForgetPasswordView() {
     setLoading(true);
     const token = searchParams.get('token'); // Retrieve the token from the URL
     try {
-      const res = await userResetPassword({ token, password });
+      const res = await userResetPassword(token, password);
       if (res.status === 'success') {
         setPageState(PAGE_STATUS.RESET_PASSWORD_SUCCESS);
         await new Promise((resolve) => setTimeout(resolve, 2000));
         navigate('/');
       } else {
         setPageState(PAGE_STATUS.RESET_PASSWORD_FAIL);
+        alert('An error occurred during reset password. Please try again.')
       }
     } catch (error) {
       setPageState(PAGE_STATUS.RESET_PASSWORD_FAIL);
+      alert('An error occurred during reset password. Please try again.')
     } finally {
       setLoading(false);
     }
@@ -144,10 +145,19 @@ export default function ForgetPasswordView() {
       <Typography variant="h4">Reset Password Email Sent</Typography>
       <Typography variant="body1">
         We’ve sent a reset link to your email. Please check your inbox and follow the instructions
-        to reset your password. You can close this tab now.
+        to reset your password. You can close this tab now or resend the email.
       </Typography>
+      <LoadingButton
+        variant="contained"
+        color="primary"
+        sx={{ mt: 2 }}
+        onClick={handleClickForgetPassword}
+      >
+        Resend Email
+      </LoadingButton>
     </Card>
   );
+  
 
   const resetPasswordFormWithConfirm = (
     <Card sx={ForgotPasswordStyles.cardContainer}>
