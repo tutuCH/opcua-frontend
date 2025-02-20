@@ -35,7 +35,7 @@ export default function UserPage() {
 
   const [filterName, setFilterName] = useState('');
 
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const handleSort = (event, id) => {
     const isAsc = orderBy === id && order === 'asc';
@@ -82,8 +82,11 @@ export default function UserPage() {
   };
 
   const handleFilterByName = (event) => {
+    console.log(`handleFilterByName`);
+    console.log(event);
+    // console.log(event.target.value);
     setPage(0);
-    setFilterName(event.target.value);
+    setFilterName(event === "*" ? "" : event);
   };
 
   const dataFiltered = applyFilter({
@@ -140,7 +143,7 @@ export default function UserPage() {
                       role={row.role}
                       status={row.status}
                       company={row.company}
-                      avatarUrl={row.avatarUrl}
+                      // avatarUrl={row.avatarUrl}
                       isVerified={row.isVerified}
                       selected={selected.indexOf(row.name) !== -1}
                       handleClick={(event) => handleClick(event, row.name)}

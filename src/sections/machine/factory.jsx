@@ -15,6 +15,7 @@ import FactoryDialog from './factoryDialog';
 import MachineDialog from './machineDialog';
 import MachineStatusCard from './machineStatusCard';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 export default function Factory() {
@@ -23,6 +24,7 @@ export default function Factory() {
   const [machineDialogState, setMachineDialogState] = useState([]);
   const [factoryDialogState, setFactoryDialogState] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const userId = localStorage.getItem('user_id');
   const ItemTypes = {
     MACHINE: 'machine',
@@ -32,10 +34,12 @@ export default function Factory() {
 
   useEffect(() => {
     const getFactoriesMachines = async () => {
+      setIsLoading(true);
       const data = await getFactoriesMachinesByUserId(userId);
       setFactories(data);
       setMachineDialogState(new Array(data.length).fill(false));
       setFactoryDialogState(new Array(data.length).fill(false));
+      setIsLoading(false);
     };
 
     getFactoriesMachines();
@@ -132,11 +136,12 @@ export default function Factory() {
     return (
       <Card className="mt-4 p-6">
         <ScrollArea className="w-full">
-          <div className="grid gap-4 mb-6" 
-          style={{
-            gridTemplateColumns: `repeat(${factory.factoryWidth}, 1fr)`,
-            minWidth: 'min-content'
-          }}
+          <div
+            className="grid gap-4 mb-6"
+            style={{
+              gridTemplateColumns: `repeat(${factory.factoryWidth}, 1fr)`,
+              minWidth: 'min-content',
+            }}
           >
             {Array.from({ length: factory.factoryWidth * factory.factoryHeight }).map(
               (_, index) => {
@@ -200,50 +205,63 @@ export default function Factory() {
   };
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="w-full">
-        {factories.map((factory, factoryIndex) => (
-          <div key={factoryIndex}>
-            <div className="my-8">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">{factory.factoryName}</h2>
-                <IconButton
-                  size="small"
-                  onClick={() => handleEditFactory(factoryIndex)}
-                  aria-label="Edit"
-                >
-                  <EditIcon />
-                </IconButton>
+    <>
+      {isLoading ? (
+        <>
+          {Array.from({ length: 8 }).map((_, index) => (
+            <Skeleton
+              key={index}
+              className="h-[125px] w-[calc(50%-1rem)] lg:w-[250px] rounded-xl"
+            />
+          ))}
+        </>
+      ) : (
+        <DndProvider backend={HTML5Backend}>
+          <div className="w-full">
+            {factories.map((factory, factoryIndex) => (
+              <div key={factoryIndex}>
+                <div className="my-8">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-semibold">{factory.factoryName}</h2>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEditFactory(factoryIndex)}
+                      aria-label="Edit"
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </div>
+                  <FactoryScrollArea factory={factory} factoryIndex={factoryIndex} />
+                </div>
+                <div className="border-t border-gray-200" />
               </div>
-              <FactoryScrollArea factory={factory} factoryIndex={factoryIndex} />
+            ))}
+
+            {/* Factory Dialogs */}
+            {factoryDialogState.map((factoryState, index) => (
+              <FactoryDialog
+                key={index}
+                open={factoryState}
+                handleClose={() => handleCloseFactoryDialog(index)}
+                factoryIndex={index}
+                setFactories={setFactories}
+                factories={factories}
+                isEditMode={isEdit}
+                setIsEdit={setIsEdit}
+                setFactoryDialogState={setFactoryDialogState}
+                setMachineDialogState={setMachineDialogState}
+              />
+            ))}
+
+            <div className="">
+              <Button className="w-full" onClick={handleAddFactory}>
+                <Iconify icon="eva:plus-fill" className="mr-2" />
+                新廠區
+              </Button>
             </div>
-            <div className="border-t border-gray-200" />
           </div>
-        ))}
-
-        {/* Factory Dialogs */}
-        {factoryDialogState.map((factoryState, index) => (
-          <FactoryDialog
-            key={index}
-            open={factoryState}
-            handleClose={() => handleCloseFactoryDialog(index)}
-            factoryIndex={index}
-            setFactories={setFactories}
-            factories={factories}
-            isEditMode={isEdit}
-            setIsEdit={setIsEdit}
-            setFactoryDialogState={setFactoryDialogState}
-            setMachineDialogState={setMachineDialogState}
-          />
-        ))}
-
-        <div className="">
-          <Button className="w-full" onClick={handleAddFactory}>
-            <Iconify icon="eva:plus-fill" className="mr-2" />
-            新廠區
-          </Button>
-        </div>
-      </div>
-    </DndProvider>
+        </DndProvider>
+      )}
+    </>
   );
 }

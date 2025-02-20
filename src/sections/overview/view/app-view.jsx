@@ -15,7 +15,7 @@ import AppWidgetSummary from '../app-widget-summary';
 import AppTrafficBySite from '../app-traffic-by-site';
 import AppCurrentSubject from '../app-current-subject';
 import AppConversionRates from '../app-conversion-rates';
-
+import { MachineChart } from '../../../components/machineChart/machineChart';
 // ----------------------------------------------------------------------
 
 export default function AppView() {
@@ -25,8 +25,8 @@ export default function AppView() {
         {/* Hi, Welcome back 👋 */}
         即時數據
       </Typography>
-
-      <Grid container spacing={3}>
+      <MachineChart />
+      {/* <Grid container spacing={3}>
         <Grid xs={12} sm={6} md={3}>
           <AppWidgetSummary
             title="製造總數"
@@ -36,7 +36,7 @@ export default function AppView() {
           />
         </Grid>
 
-        {/* <Grid xs={12} sm={6} md={3}>
+        <Grid xs={12} sm={6} md={3}>
           <AppWidgetSummary
             title="New Users"
             total={1352831}
@@ -52,7 +52,7 @@ export default function AppView() {
             color="warning"
             icon={<img alt="icon" src="/assets/icons/glass/ic_glass_buy.png" />}
           />
-        </Grid> */}
+        </Grid>
 
         <Grid xs={12} sm={6} md={3}>
           <AppWidgetSummary
@@ -225,7 +225,7 @@ export default function AppView() {
             ]}
           />
         </Grid>
-      </Grid>
+      </Grid> */}
     </Container>
   );
 }

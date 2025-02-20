@@ -15,7 +15,7 @@ import { Card } from "@/components/ui/card";
 // ----------------------------------------------------------------------
 
 export default function SettingsView() {
-  const [resetSuccess, setResetSuccess] = useState(true);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   const handleResetPassword = async () => {
     const email = localStorage.getItem('email');

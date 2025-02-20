@@ -15,7 +15,7 @@ const navConfig = [
   },
   {
     title: '紀錄',
-    path: '/user',
+    path: '/records',
     icon: icon('ic_user'),
   },
   // {
