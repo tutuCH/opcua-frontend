@@ -28,18 +28,18 @@ export default function Header({ onOpenNav }) {
 
   const renderContent = (
     <>
-      {!lgUp && (
+      {/* {!lgUp && (
         <IconButton onClick={onOpenNav} sx={{ mr: 1 }}>
           <Iconify icon="eva:menu-2-fill" />
         </IconButton>
-      )}
+      )} */}
 
-      <Searchbar />
+      {/* <Searchbar /> */}
 
       <Box sx={{ flexGrow: 1 }} />
 
       <Stack direction="row" alignItems="center" spacing={1}>
-        <LanguagePopover />
+        {/* <LanguagePopover /> */}
         <NotificationsPopover />
         <AccountPopover />
       </Stack>

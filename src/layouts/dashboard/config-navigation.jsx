@@ -1,5 +1,4 @@
-import PointOfSaleTwoToneIcon from '@mui/icons-material/PointOfSaleTwoTone';
-
+import { Cog, Sheet, Factory } from 'lucide-react';
 import SvgColor from 'src/components/svg-color';
 // ----------------------------------------------------------------------
 
@@ -9,25 +8,21 @@ const icon = (name) => (
 
 const navConfig = [
   {
-    title: '主頁',
-    path: '/',
-    icon: icon('ic_analytics'),
+    title: '工廠',
+    path: '/factory',
+    icon: <Factory size={24} />,
   },
-  {
-    title: '紀錄',
-    path: '/records',
-    icon: icon('ic_user'),
-  },
-  // {
-  //   title: 'product',
-  //   path: '/products',
-  //   icon: icon('ic_cart'),
-  // },
   {
     title: '機台',
     path: '/machine',
-    icon: <PointOfSaleTwoToneIcon />,
+    icon: <Cog size={24} />,
   },
+  {
+    title: '操作日誌',
+    path: '/records',
+    icon: <Sheet size={24} />,
+  },
+
   // {
   //   title: 'login',
   //   path: '/login',

@@ -15,12 +15,21 @@ import FactoryDialog from './factoryDialog';
 import MachineDialog from './machineDialog';
 import MachineStatusCard from './machineStatusCard';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import LoadingSkeleton from '@/components/loadingSkeleton/loadingSkeleton';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useParams, useNavigate } from 'react-router-dom';
 
 export default function Factory() {
   const [factories, setFactories] = useState([]);
   const [selectedAddMachineIndex, setSelectedAddMachineIndex] = useState(null);
+  const [selectedFactoryIndex, setSelectedFactoryIndex] = useState(-1);
   const [machineDialogState, setMachineDialogState] = useState([]);
   const [factoryDialogState, setFactoryDialogState] = useState([]);
   const [isEdit, setIsEdit] = useState(false);
@@ -29,21 +38,28 @@ export default function Factory() {
   const ItemTypes = {
     MACHINE: 'machine',
   };
-
-  useEffect(() => {}, [machineDialogState]);
-
+  const { factoryId } = useParams();
   useEffect(() => {
+    factoryId && setSelectedFactoryIndex(parseInt(factoryId, 10));
     const getFactoriesMachines = async () => {
       setIsLoading(true);
       const data = await getFactoriesMachinesByUserId(userId);
       setFactories(data);
       setMachineDialogState(new Array(data.length).fill(false));
       setFactoryDialogState(new Array(data.length).fill(false));
+      
+      if (factoryId) {
+        const index = data.findIndex(factory => factory.factoryId === factoryId);
+        if (index !== -1) {
+          setSelectedFactoryIndex(index);
+        }
+      }
+      
       setIsLoading(false);
     };
 
     getFactoriesMachines();
-  }, [userId]);
+  }, [userId, factoryId]);
 
   const handleAddMachine = (factoryIndex, index) => {
     setMachineDialogState(machineDialogState.map((open, i) => (i === factoryIndex ? true : open)));
@@ -109,7 +125,8 @@ export default function Factory() {
   };
 
   const removeCurrentFactory = async (factoryId, factoryIndex) => {
-    const removeFactoryRes = await removeFactory(factoryId);
+    setSelectedFactoryIndex(-1);
+    await removeFactory(factoryId);
     setFactories((prevFactories) => {
       const updatedFactories = [...prevFactories];
       updatedFactories.pop();
@@ -204,38 +221,81 @@ export default function Factory() {
     );
   };
 
+  const SelectFactoryComponent = () => {
+    return (
+      <div className="flex justify-between items-center">
+        <Select onValueChange={(value) => handleSelectFactory(parseInt(value, 10))}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue
+              placeholder={
+                selectedFactoryIndex === -1
+                  ? '全部廠區'
+                  : factories[selectedFactoryIndex].factoryName
+              }
+            />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="-1">全部廠區</SelectItem>
+            {factories.map((factory, index) => (
+              <SelectItem key={index} value={index.toString()}>
+                {factory.factoryName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {selectedFactoryIndex !== -1 && (
+          <IconButton
+            size="small"
+            onClick={() => handleEditFactory(selectedFactoryIndex)}
+            aria-label="Edit"
+          >
+            <EditIcon />
+          </IconButton>
+        )}
+      </div>
+    );
+  };
+
+  const handleSelectFactory = (factoryIndex) => {
+    setSelectedFactoryIndex(factoryIndex);
+  };
+
+  // Extracted common factory display logic into a reusable component
+  const FactoryStatusChart = ({ factory, factoryIndex }) => (
+    <div>
+      <div className="my-8">
+        <FactoryScrollArea factory={factory} factoryIndex={factoryIndex} />
+      </div>
+      <div className="border-t border-gray-200" />
+    </div>
+  );
+
   return (
     <>
       {isLoading ? (
-        <>
-          {Array.from({ length: 8 }).map((_, index) => (
-            <Skeleton
-              key={index}
-              className="h-[125px] w-[calc(50%-1rem)] lg:w-[250px] rounded-xl"
-            />
-          ))}
-        </>
+        <LoadingSkeleton />
       ) : (
         <DndProvider backend={HTML5Backend}>
           <div className="w-full">
-            {factories.map((factory, factoryIndex) => (
-              <div key={factoryIndex}>
-                <div className="my-8">
-                  <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-semibold">{factory.factoryName}</h2>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleEditFactory(factoryIndex)}
-                      aria-label="Edit"
-                    >
-                      <EditIcon />
-                    </IconButton>
-                  </div>
-                  <FactoryScrollArea factory={factory} factoryIndex={factoryIndex} />
-                </div>
-                <div className="border-t border-gray-200" />
-              </div>
-            ))}
+            <SelectFactoryComponent />
+
+            {selectedFactoryIndex === -1
+              ? // Display all factories
+                factories.map((factory, factoryIndex) => (
+                  <FactoryStatusChart
+                    key={factoryIndex}
+                    factory={factory}
+                    factoryIndex={factoryIndex}
+                  />
+                ))
+              : // Display only the selected factory if valid
+                selectedFactoryIndex >= 0 &&
+                selectedFactoryIndex < factories.length && (
+                  <FactoryStatusChart
+                    factory={factories[selectedFactoryIndex]}
+                    factoryIndex={selectedFactoryIndex}
+                  />
+                )}
 
             {/* Factory Dialogs */}
             {factoryDialogState.map((factoryState, index) => (
