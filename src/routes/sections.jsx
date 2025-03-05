@@ -6,11 +6,11 @@ import DashboardLayout from 'src/layouts/dashboard';
 import AuthMiddleware from 'src/components/AuthMiddleware';
 
 export const IndexPage = lazy(() => import('src/pages/app'));
-export const BlogPage = lazy(() => import('src/pages/blog'));
 export const FactoryPage = lazy(() => import('src/pages/factory'));
 export const MachinePage = lazy(() => import('src/pages/machine'));
 export const UserPage = lazy(() => import('src/pages/user'));
 export const RecordsPage = lazy(() => import('src/pages/records'));
+export const WarningsPage = lazy(() => import('src/pages/warnings'));
 export const LoginPage = lazy(() => import('src/pages/login'));
 export const SignupPage = lazy(() => import('src/pages/signup'));
 export const SettingsPage = lazy(() => import('src/pages/settings'));
@@ -36,8 +36,8 @@ export default function Router() {
         { element: <IndexPage />, index: true },
         { path: 'user', element: <UserPage /> },
         { path: 'records', element: <RecordsPage /> },
+        { path: 'warnings', element: <WarningsPage /> },
         { path: 'products', element: <ProductsPage /> },
-        { path: 'blog', element: <BlogPage /> },
         { path: 'factory', element: <FactoryPage /> },
         { path: 'factory/:factoryId', element: <FactoryPage /> },
         { path: 'machine', element: <MachinePage /> },

@@ -2,12 +2,7 @@ import Stack from '@mui/material/Stack';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid2';
 import Typography from '@mui/material/Typography';
-
-import { posts } from 'src/_mock/blog';
-
 import Machine from '../machine';
-import PostSearch from '../post-search';
-
 
 // ----------------------------------------------------------------------
 

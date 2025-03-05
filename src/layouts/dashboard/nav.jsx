@@ -102,7 +102,7 @@ Nav.propTypes = {
 
 const NavItem = React.memo(function NavItem({ item }) {
   const pathname = usePathname();
-  const active = item.path === pathname;
+  const active = pathname.includes(item.path);
 
   return (
     <ListItemButton

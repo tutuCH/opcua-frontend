@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 export default function Factory() {
   const [factories, setFactories] = useState([]);
@@ -74,10 +74,19 @@ export default function Factory() {
 
   const handleAddFactory = async () => {
     setIsEdit(false);
-    setFactoryDialogState(
-      factoryDialogState.map((open, i) => (i === factories.length - 1 ? true : open))
-    );
+  
+    if (factoryDialogState.length === 0 || factories.length === 0) {
+      setFactoryDialogState([true]);
+    } else {
+      setFactoryDialogState(
+        factoryDialogState.map((open, i) => (i === factories.length - 1 ? true : open))
+      );
+    }
   };
+
+  useEffect(() => {
+    console.log('factoryDialogState', factoryDialogState);
+  }, [factoryDialogState]);
 
   const handleCloseFactoryDialog = (index) => {
     setFactoryDialogState((prevState) => prevState.map((open, i) => (i === index ? false : open)));
@@ -86,7 +95,7 @@ export default function Factory() {
   const handleDropMachine = async (item, index) => {
     const { factoryIndex, machineIndex, machineId } = item;
     if (index !== machineIndex) {
-      await updateMachineIndex({ machineId, machineIndex: index });
+      await updateMachineIndex({ machineId, machineIndex: index, factoryId: factories[factoryIndex].factoryId });
       setFactories((prevFactories) => {
         const updatedFactories = [...prevFactories];
         const targetFactory = { ...updatedFactories[factoryIndex] };
@@ -128,8 +137,10 @@ export default function Factory() {
     setSelectedFactoryIndex(-1);
     await removeFactory(factoryId);
     setFactories((prevFactories) => {
-      const updatedFactories = [...prevFactories];
-      updatedFactories.pop();
+      console.log('prevFactories', prevFactories);
+      const updatedFactories = prevFactories.filter(
+        (factory) => factory.factoryId !== factoryId
+      );
       return updatedFactories;
     });
     setFactoryDialogState((prevFactoryDialogState) => {
@@ -223,7 +234,7 @@ export default function Factory() {
 
   const SelectFactoryComponent = () => {
     return (
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-4">
         <Select onValueChange={(value) => handleSelectFactory(parseInt(value, 10))}>
           <SelectTrigger className="w-[180px]">
             <SelectValue

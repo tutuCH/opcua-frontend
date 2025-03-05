@@ -1,4 +1,4 @@
-import { Cog, Sheet, Factory } from 'lucide-react';
+import { Cog, Sheet, Factory, CloudAlert } from 'lucide-react';
 import SvgColor from 'src/components/svg-color';
 // ----------------------------------------------------------------------
 
@@ -22,6 +22,11 @@ const navConfig = [
     path: '/records',
     icon: <Sheet size={24} />,
   },
+  {
+    title: '警告',
+    path: '/warnings',
+    icon: <CloudAlert size={24} />,
+  }
 
   // {
   //   title: 'login',

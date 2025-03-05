@@ -17,12 +17,18 @@ export const AuthProvider = ({ children }) => {
   const login = (token, userId) => {
     localStorage.setItem('access_token', token);
     localStorage.setItem('user_id', userId);
+    localStorage.setItem('email', email);
+    localStorage.setItem('username', username);
+    localStorage.setItem('token_expiration', expirationDate.toISOString());
     setIsAuthenticated(true);
   };
 
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user_id');
+    localStorage.removeItem('email');
+    localStorage.removeItem('username');
+    localStorage.removeItem('token_expiration');
     setIsAuthenticated(false);
   };
 

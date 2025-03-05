@@ -56,14 +56,16 @@ export const userVerifyEmail = async (token) => {
     const response = await axios.get(`${BACKEND_URL}/auth/verify-email?token=${token}`, {
     });
     // Assuming the response contains an access_token after signup
-    const { userId, access_token, status, message } = response.data;
+    const { userId, access_token, status, message, email, username } = response.data;
     const expirationDate = new Date();
     expirationDate.setDate(expirationDate.getDate() + 30);
 
     // Store the token and its expiration in localStorage
     localStorage.setItem('access_token', access_token);
     localStorage.setItem('user_id', userId);
-    localStorage.setItem('token_expiration', expirationDate.toISOString());    
+    localStorage.setItem('token_expiration', expirationDate.toISOString());
+    localStorage.setItem('email', email);
+    localStorage.setItem('username', username);
     return { userId, access_token, status, message };
 
   } catch (error) {

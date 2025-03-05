@@ -84,6 +84,11 @@ export default function FactoryDialog(props) {
 
   const handleUpdateFactory = async (factoryName, width, height) => {
     const factoryId = factories[factoryIndex].factoryId;
+    const lastMachineIndex = factories[factoryIndex].machines.sort((a, b) => a.machineIndex - b.machineIndex)[factories[factoryIndex].machines.length - 1].machineIndex;
+    if (lastMachineIndex >= width * height) {
+      alert('工廠大小不足以容納所有機台');
+      return;
+    }
     const updateNewFactoryRes = await updateFactory({ factoryName, userId, factoryIndex, width, height, factoryId });
     updateFactoryInState(updateNewFactoryRes);
     setFactoryName('');
