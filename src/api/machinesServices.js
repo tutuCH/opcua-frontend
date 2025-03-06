@@ -12,11 +12,64 @@ const getAuthHeaders = () => {
 
 export const getFactoriesMachinesByUserId = async () => {
   try {
-    const response = await axios.get(`${BACKEND_URL}/machines/factories-machines`, {
-      headers: getAuthHeaders(),
-    });
-    const data = response.data;
-    return data;
+    // const response = await axios.get(`${BACKEND_URL}/machines/factories-machines`, {
+    //   headers: getAuthHeaders(),
+    // });
+    // const data = response.data;
+
+    // demo code for success
+    const response = {
+        status: 200,
+        data: [
+          {
+              "factoryId": 1,
+              "factoryName": "工廠一",
+              "factoryWidth": 6,
+              "factoryHeight": 3,
+              "machines": [
+                  {
+                      "machineId": 79,
+                      "machineName": "SampleServer",
+                      "machineIpAddress": "opc.tcp://opcua.demo-this.com:51210/UA/SampleServer",
+                      "machineIndex": 0
+                  },
+                  {
+                      "machineId": 81,
+                      "machineName": "machine 5",
+                      "machineIpAddress": "opc.tcp://Harrys-MacBook-Pro.local:26541",
+                      "machineIndex": 3
+                  },
+                  {
+                      "machineId": 90,
+                      "machineName": "機台一",
+                      "machineIpAddress": "opc.tcp://Harrys-MacBook-Pro.local:26541",
+                      "machineIndex": 8
+                  }
+              ]
+          },
+          {
+              "factoryId": 48,
+              "factoryName": "工廠二",
+              "factoryWidth": 5,
+              "factoryHeight": 2,
+              "machines": [
+                  {
+                      "machineId": 92,
+                      "machineName": "machine #92",
+                      "machineIpAddress": "opc.tcp://Harrys-MacBook-Pro.local:26541",
+                      "machineIndex": 0
+                  },
+                  {
+                      "machineId": 93,
+                      "machineName": "machine #93",
+                      "machineIpAddress": "opc.tcp://Harrys-MacBook-Pro.local:00093",
+                      "machineIndex": 2
+                  }
+              ]
+          }
+      ]
+    }
+    return response.data;
   } catch (error) {
     console.error('Error getting factories and machines by userId:', error);
     throw error;

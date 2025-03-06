@@ -6,11 +6,20 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export const userLogin = async (email, password) => {
   try {
     // Send the login request to the backend
-    const response = await axios.post(`${BACKEND_URL}/auth/login`, {
-      email,
-      password
-    });
-
+    // const response = await axios.post(`${BACKEND_URL}/auth/login`, {
+    //   email,
+    //   password
+    // });
+    const response = {
+      status: 200,
+      data: {
+        access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInVzZXJuYW1lIjoiaGFycnl0Y2giLCJlbWFpbCI6InR1Y2hlbmhzaWVuQGdtYWlsLmNvbSIsImFjY2Vzc0xldmVsIjoiIiwiaWF0IjoxNzQxMjM1MzYwLCJleHAiOjE3NDE4NDAxNjB9.gFurPjH2VB5_0Wd8V8ggJjFb_sk88_OArxDHPDaZmow",
+        userId: "1",
+        email: "tuchenhsien@gmail.com",
+        accessLevel: "",
+        username: "harrytch"
+      }
+    }
     // Assuming the response contains an access_token
     const { access_token, userId, username } = response.data;
 
