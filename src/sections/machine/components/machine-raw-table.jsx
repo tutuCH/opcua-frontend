@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { format } from 'date-fns';
 
 import Iconify from 'src/components/iconify';
+import { Download } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 import {
@@ -226,6 +228,67 @@ export default function MachineRawTable() {
     },
   });
 
+  // Convert data to CSV
+  const convertToCSV = (data) => {
+    if (data.length === 0) return '';
+
+    // Get headers
+    const headers = Object.keys(data[0]);
+
+    // Create CSV rows
+    const csvRows = [];
+    csvRows.push(headers.join(','));
+
+    // Add data rows
+    data.forEach((item) => {
+      const values = headers.map((header) => {
+        const value = item[header];
+
+        // Handle values that need to be quoted (contain commas, newlines, or quotes)
+        if (value === null || value === undefined) return '';
+
+        const valueStr = value.toString();
+        if (valueStr.includes(',') || valueStr.includes('\n') || valueStr.includes('"')) {
+          return `"${valueStr.replace(/"/g, '""')}"`;
+        }
+        return valueStr;
+      });
+      csvRows.push(values.join(','));
+    });
+
+    return csvRows.join('\n');
+  };
+
+  // Export data as CSV
+  const exportCSV = (data, filename) => {
+    const csv = convertToCSV(data);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+
+    // Create download link
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Handle CSV export
+  const handleExportCSV = () => {
+    // Use the filtered data from the table
+    const filteredData = table.getFilteredRowModel().rows.map(row => row.original);
+    
+    const now = new Date();
+    const dateStr = format(now, 'yyyy-MM-dd_HH-mm');
+    const filename = `machine-data_${dateStr}.csv`;
+
+    exportCSV(filteredData, filename);
+  };
+
   return (
     <div className="w-full">
       <div className="flex items-center py-4 justify-between">
@@ -235,34 +298,44 @@ export default function MachineRawTable() {
           onChange={(event) => table.getColumn('MachineID')?.setFilterValue(event.target.value)}
           className="max-w-sm"
         />
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline">Open popover</Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <div key={column.id} className="flex items-center space-x-2 mb-2">
-                    <Checkbox
-                      className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                      id={column.id}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                      checked={column.getIsVisible()}
-                    />
-                    <label
-                      htmlFor={column.id}
-                      className="capitalize text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {column.id}
-                    </label>
-                  </div>
-                );
-              })}
-          </PopoverContent>
-        </Popover>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-2" 
+            onClick={handleExportCSV}
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">Columns</Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <div key={column.id} className="flex items-center space-x-2 mb-2">
+                      <Checkbox
+                        className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                        id={column.id}
+                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                        checked={column.getIsVisible()}
+                      />
+                      <label
+                        htmlFor={column.id}
+                        className="capitalize text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        {column.id}
+                      </label>
+                    </div>
+                  );
+                })}
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
       <div className="rounded-md border bg-white">
         <Table>

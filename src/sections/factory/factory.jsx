@@ -84,10 +84,6 @@ export default function Factory() {
     }
   };
 
-  useEffect(() => {
-    console.log('factoryDialogState', factoryDialogState);
-  }, [factoryDialogState]);
-
   const handleCloseFactoryDialog = (index) => {
     setFactoryDialogState((prevState) => prevState.map((open, i) => (i === index ? false : open)));
   };
