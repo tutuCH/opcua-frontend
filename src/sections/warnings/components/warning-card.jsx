@@ -20,32 +20,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { demoWarnings } from "../demo-warning";
+import { demoWarnings } from "src/_mock/demo-warning";
 
-// Map severity to colors and icons
-// const severityConfig = {
-//   "輕微": { 
-//     color: "bg-blue-100 text-blue-800 border-blue-300", 
-//     icon: <Info className="h-5 w-5 text-blue-500" />,
-//     badgeColor: "bg-blue-100 hover:bg-blue-100 text-blue-800"
-//   },
-//   "中等": { 
-//     color: "bg-yellow-100 text-yellow-800 border-yellow-300", 
-//     icon: <AlertTriangle className="h-5 w-5 text-yellow-500" />,
-//     badgeColor: "bg-yellow-100 hover:bg-yellow-100 text-yellow-800"
-//   },
-//   "嚴重": { 
-//     color: "bg-orange-100 text-orange-800 border-orange-300", 
-//     icon: <AlertOctagon className="h-5 w-5 text-orange-500" />,
-//     badgeColor: "bg-orange-100 hover:bg-orange-100 text-orange-800"
-//   },
-//   "危急": { 
-//     color: "bg-red-100 text-red-800 border-red-300", 
-//     icon: <AlertCircle className="h-5 w-5 text-red-500" />,
-//     badgeColor: "bg-red-100 hover:bg-red-100 text-red-800"
-//   }
-// };
-
+// to do: change to backend
 const SEVERITY_LEVEL = {
   "LOW": {
     CHINESE: "輕微",

@@ -3,7 +3,7 @@ import Container from '@mui/material/Container';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid2';
-import { demoWarnings } from '../demo-warning';
+import { demoWarnings } from 'src/_mock/demo-warning';
 import WarningCard from '../components/warning-card';
 import AdvancedDatePicker from '../components/advanced-date-picker';
 

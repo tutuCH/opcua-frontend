@@ -11,9 +11,9 @@ import Iconify from 'src/components/iconify/iconify';
 import IconButton from '@mui/material/IconButton';
 import EditIcon from '@mui/icons-material/Edit';
 import { Button } from '@/components/ui/button';
-import FactoryDialog from './factoryDialog';
-import MachineDialog from './machineDialog';
-import MachineStatusCard from './machineStatusCard';
+import FactoryDialog from './factory-dialog';
+import MachineDialog from './machine-dialog';
+import MachineStatusCard from './machine-status-card';
 import { Card } from '@/components/ui/card';
 import LoadingSkeleton from '@/components/loadingSkeleton/loadingSkeleton';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -177,7 +177,7 @@ export default function Factory() {
                   (machine) => machine.machineIndex === index
                 );
                 return (
-                  <div key={index} className="min-w-32">
+                  <div key={index} className="w-24">
                     {matchingMachine ? (
                       <MachineStatusCard
                         key={matchingMachine.machineId}
@@ -194,7 +194,7 @@ export default function Factory() {
                       >
                         <Button
                           variant="outline"
-                          className="h-40 w-full border-dashed border-gray-400 hover:bg-gray-100"
+                          className="h-24 w-full border-dashed border-gray-400 hover:bg-gray-100"
                           onClick={() => handleAddMachine(factoryIndex, index)}
                         >
                           <AddIcon className="h-8 w-8 text-gray-500" />

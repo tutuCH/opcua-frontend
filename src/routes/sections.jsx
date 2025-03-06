@@ -33,7 +33,7 @@ export default function Router() {
         </AuthMiddleware>
       ),
       children: [
-        { element: <IndexPage />, index: true },
+        { element: <FactoryPage />, index: true },
         { path: 'user', element: <UserPage /> },
         { path: 'records', element: <RecordsPage /> },
         { path: 'warnings', element: <WarningsPage /> },

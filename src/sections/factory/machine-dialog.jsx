@@ -8,7 +8,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import { connectByIpAddress, insertMachine } from 'src/api/machinesServices';
+import { insertMachine } from 'src/api/machinesServices';
 
 MachineDialog.propTypes = {
   open: PropTypes.bool,
@@ -27,7 +27,6 @@ export default function MachineDialog(props) {
 
 
   const handleEstablishConnection = async (ipAddress, machineName, machineIndex) => {
-    const connectByIpAddressRes = await connectByIpAddress(ipAddress);
     const factoryId = factory.factoryId;
     const insertMachineRes = await insertMachine({
       machineIpAddress: ipAddress, 
@@ -83,11 +82,10 @@ export default function MachineDialog(props) {
         }}
         aria-modal="true" // Add aria-modal attribute
       >
-        <DialogTitle>Subscribe</DialogTitle>
+        <DialogTitle>新增機器</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            To subscribe to your machine, please enter your IP address here. We
-            will send updates occasionally.
+            請輸入機器名稱和IP地址
           </DialogContentText>
           <TextField
             autoFocus
