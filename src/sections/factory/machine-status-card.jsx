@@ -16,19 +16,19 @@ const ItemTypes = {
 const STATUS_CONFIG = {
   online: {
     className: 'border-green-400 bg-gradient-to-br from-green-50 to-green-100',
-    icon: <Wifi className="h-5 w-5 text-green-600" />,
+    icon: <Wifi className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />,
   },
   offline: {
     className: 'border-gray-400 bg-gradient-to-br from-gray-50 to-gray-100',
-    icon: <WifiOff className="h-5 w-5 text-gray-500" />,
+    icon: <WifiOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />,
   },
   warning: {
     className: 'border-amber-400 bg-gradient-to-br from-amber-50 to-amber-100',
-    icon: <AlertTriangle className="h-5 w-5 text-amber-600" />,
+    icon: <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />,
   },
   error: {
     className: 'border-red-400 bg-gradient-to-br from-red-50 to-red-100',
-    icon: <AlertCircle className="h-5 w-5 text-red-600" />,
+    icon: <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />,
   },
 };
 
@@ -80,13 +80,13 @@ export default function MachineStatusCard({
     <TooltipProvider delayDuration={100}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Link to={`/machine/${machine.machineId}`} className="block">
+          <Link to={`/machine/${machine.machineId}`} className="block h-full w-full">
             <Card
               ref={drag}
               className={`
-                w-24 h-24
+                w-full h-full
                 flex flex-col items-center justify-between
-                p-2
+                p-1 sm:p-2
                 border border-dashed
                 rounded-md shadow-sm
                 transition-all duration-200
@@ -100,18 +100,18 @@ export default function MachineStatusCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-5 w-5 rounded-full hover:bg-black/10 p-0 absolute top-1 right-1"
+                className="h-4 w-4 sm:h-5 sm:w-5 rounded-full hover:bg-black/10 p-0 absolute top-0.5 right-0.5 sm:top-1 sm:right-1"
                 onClick={handleDelete}
                 aria-label="Delete"
               >
-                <X className="h-4 w-4 text-red-500" />
+                <X className="h-3 w-3 sm:h-4 sm:w-4 text-red-500" />
               </Button>
               
               <div className="flex flex-col items-center justify-center w-full h-full">
-                <div className="text-center mb-1">
+                <div className="text-center mb-0.5 sm:mb-1">
                   {statusConfig.icon}
                 </div>
-                <span className="font-medium text-center text-xs leading-tight max-w-full truncate">
+                <span className="font-medium text-center text-[10px] sm:text-xs leading-tight max-w-full truncate px-1">
                   {machine.machineName}
                 </span>
               </div>
@@ -120,13 +120,13 @@ export default function MachineStatusCard({
         </TooltipTrigger>
         <TooltipContent>
           <Box>
-            <div>
+            <div className="text-xs sm:text-sm">
               Name: <span className="font-bold">{machine.machineName}</span>
             </div>
-            <div>
+            <div className="text-xs sm:text-sm">
               IP: <span className="font-bold">{machine.machineIpAddress}</span>
             </div>
-            <div>
+            <div className="text-xs sm:text-sm">
               Status: <span className="font-bold capitalize">{status}</span>
             </div>
           </Box>
