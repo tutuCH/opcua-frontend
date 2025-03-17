@@ -10,7 +10,7 @@ export const BottomNav = React.memo(() => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 border-t bg-background dark:bg-slate-950 z-50">
-      <nav className="flex justify-around p-3 pb-10">
+      <nav className="flex justify-around p-3 pb-8">
         {navConfig.map((item) => {
           const isActive = pathname === item.path;
           const classes = cn(
