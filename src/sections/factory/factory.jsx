@@ -98,26 +98,39 @@ export default function Factory() {
     const { factoryIndex, machineIndex, machineId } = item;
     if (index !== machineIndex) {
       await updateMachineIndex({ machineId, machineIndex: index, factoryId: factories[factoryIndex].factoryId });
+      
       setFactories((prevFactories) => {
         const updatedFactories = [...prevFactories];
         const targetFactory = { ...updatedFactories[factoryIndex] };
-        const machine = targetFactory.machines.find(
+        
+        // Find the machine to update
+        const machineToUpdate = targetFactory.machines.find(
           (machine) => machine.machineIndex === machineIndex
         );
-
-        if (machine) {
-          machine.machineIndex = index;
-          targetFactory.machines = targetFactory.machines.filter(
-            (m) => m.machineIndex !== machineIndex
-          );
-          targetFactory.machines.push(machine);
+        
+        if (machineToUpdate) {
+          // Create a new machines array with the updated machine index
+          targetFactory.machines = targetFactory.machines.map(machine => {
+            if (machine.machineId === machineId) {
+              return { ...machine, machineIndex: index };
+            }
+            return machine;
+          });
+          
+          // Sort machines by index if needed
+          targetFactory.machines.sort((a, b) => a.machineIndex - b.machineIndex);
+          
           updatedFactories[factoryIndex] = targetFactory;
         }
+        
         return updatedFactories;
       });
     }
   };
 
+  useEffect(() => {
+    console.log('factories', factories);
+  }, [factories]);
   const DropTarget = ({ index, onDrop, children }) => {
     const [{ isOver, canDrop }, drop] = useDrop({
       accept: ItemTypes.MACHINE,
