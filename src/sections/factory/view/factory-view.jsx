@@ -1,25 +1,17 @@
-import Stack from '@mui/material/Stack';
-import Container from '@mui/material/Container';
-import Grid from '@mui/material/Grid2';
-import Typography from '@mui/material/Typography';
-
-import { posts } from 'src/_mock/blog';
-
 import Factory from '../factory';
 import PostSearch from '../post-search';
 
-
 // ----------------------------------------------------------------------
 
-export default function MachineView() {
+export default function FactoryView() {
   return (
-    <Container>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-        <Typography variant="h4">工廠</Typography>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-row items-center justify-between mb-10">
+        <h1 className="text-2xl font-bold tracking-tight">工廠</h1>
+      </div>
 
-      </Stack>
-{/* 
-      <Stack mb={5} direction="row" alignItems="center" justifyContent="space-between">
+      {/* 
+      <div className="flex flex-row items-center justify-between mb-10">
         <PostSearch posts={posts} />
         <PostSort
           options={[
@@ -28,10 +20,12 @@ export default function MachineView() {
             { value: 'oldest', label: 'Oldest' },
           ]}
         />
-      </Stack> */}
-      <Grid container spacing={3}>
-        <Factory/>
-      </Grid>      
-    </Container>
+      </div> 
+      */}
+      
+      <div className="grid grid-cols-1 gap-6">
+        <Factory />
+      </div>
+    </div>
   );
 }

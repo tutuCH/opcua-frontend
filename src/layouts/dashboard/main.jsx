@@ -19,7 +19,9 @@ export default function Main({ children, sx, ...other }) {
         minHeight: 1,
         display: 'flex',
         flexDirection: 'column',
-        py: `${HEADER.H_MOBILE + SPACING}px`,
+        // py: `${HEADER.H_MOBILE + SPACING}px`,
+        pt: `${HEADER.H_MOBILE_TOP + SPACING}px`,
+        pb: `${HEADER.H_MOBILE_BOTTOM + SPACING}px`,
         ...(lgUp && {
           px: 2,
           py: `${HEADER.H_DESKTOP + SPACING}px`,
