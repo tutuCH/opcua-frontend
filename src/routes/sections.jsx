@@ -5,17 +5,13 @@ import { Outlet, Navigate, useRoutes } from 'react-router-dom';
 import DashboardLayout from 'src/layouts/dashboard';
 import AuthMiddleware from 'src/components/AuthMiddleware';
 
-export const IndexPage = lazy(() => import('src/pages/app'));
 export const FactoryPage = lazy(() => import('src/pages/factory'));
 export const MachinePage = lazy(() => import('src/pages/machine'));
-export const UserPage = lazy(() => import('src/pages/user'));
 export const RecordsPage = lazy(() => import('src/pages/records'));
 export const WarningsPage = lazy(() => import('src/pages/warnings'));
 export const LoginPage = lazy(() => import('src/pages/login'));
 export const SignupPage = lazy(() => import('src/pages/signup'));
-export const SettingsPage = lazy(() => import('src/pages/settings'));
 export const ForgetPasswordPage = lazy(() => import('src/pages/forgotPassword'));
-export const ProductsPage = lazy(() => import('src/pages/products'));
 export const Page404 = lazy(() => import('src/pages/page-not-found'));
 
 // ----------------------------------------------------------------------
@@ -34,15 +30,12 @@ export default function Router() {
       ),
       children: [
         { element: <FactoryPage />, index: true },
-        { path: 'user', element: <UserPage /> },
-        { path: 'records', element: <RecordsPage /> },
-        { path: 'warnings', element: <WarningsPage /> },
-        { path: 'products', element: <ProductsPage /> },
         { path: 'factory', element: <FactoryPage /> },
         { path: 'factory/:factoryId', element: <FactoryPage /> },
         { path: 'machine', element: <MachinePage /> },
         { path: 'machine/:machineId', element: <MachinePage /> },
-        { path: 'settings', element: <SettingsPage /> },
+        { path: 'records', element: <RecordsPage /> },
+        { path: 'warnings', element: <WarningsPage /> },
       ],
     },
     {

@@ -33,15 +33,15 @@ export function useResponsive(query, start, end) {
 
 export function useWidth() {
   const theme = useTheme();
-
   const keys = [...theme.breakpoints.keys].reverse();
-
-  return (
-    keys.reduce((output, key) => {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      const matches = useMediaQuery(theme.breakpoints.up(key));
-
-      return !output && matches ? key : output;
-    }, null) || 'xs'
-  );
+  
+  // Create all media queries outside the reducer to follow React hooks rules
+  const mediaQueries = keys.map(key => ({
+    key,
+    matches: useMediaQuery(theme.breakpoints.up(key))
+  }));
+  
+  // Find the first matching breakpoint
+  const matchingBreakpoint = mediaQueries.find(({ matches }) => matches);
+  return matchingBreakpoint ? matchingBreakpoint.key : 'xs';
 }

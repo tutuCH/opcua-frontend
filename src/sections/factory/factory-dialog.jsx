@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { createFactory, updateFactory } from 'src/api/machinesServices';
 import { Factory, Thermometer, Gauge, AlertTriangle, Copy, Clipboard, Check } from 'lucide-react';
@@ -39,18 +39,6 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-FactoryDialog.propTypes = {
-  open: PropTypes.bool,
-  handleClose: PropTypes.func,
-  factory: PropTypes.object,
-  factoryIndex: PropTypes.number,
-  setFactories: PropTypes.func,
-  isEditMode: PropTypes.bool,
-  setIsEdit: PropTypes.func,
-  setFactoryDialogState: PropTypes.func,
-  setMachineDialogState: PropTypes.func,
-};
-
 // Default warning criteria template
 const DEFAULT_CRITERIA = {
   temperature: { enabled: false, condition: 'exceeds', value: 80 },
@@ -61,7 +49,7 @@ const DEFAULT_CRITERIA = {
   screwRpm: { enabled: false, condition: 'exceeds', value: 100 },
 };
 
-export default function FactoryDialog({
+const FactoryDialog = ({
   open,
   handleClose,
   factoryIndex,
@@ -71,7 +59,7 @@ export default function FactoryDialog({
   setIsEdit,
   setFactoryDialogState,
   setMachineDialogState
-}) {
+}) => {
   const [factoryName, setFactoryName] = useState('');
   const [width, setWidth] = useState('');
   const [height, setHeight] = useState('');
@@ -192,9 +180,9 @@ export default function FactoryDialog({
       );
       
       if (lastMachineIndex >= parseInt(width, 10) * parseInt(height, 10)) {
-        alert('工廠大小不足以容納所有機台');
-        return;
-      }
+      alert('工廠大小不足以容納所有機台');
+      return;
+    }
     }
     
     const updateNewFactoryRes = await updateFactory({ 
@@ -221,7 +209,7 @@ export default function FactoryDialog({
         if (factory.factoryId === updatedFactoryData.factoryId) {
           // Update factory info
           const updatedFactoryObj = {
-            ...factory,
+              ...factory,
             factoryName: updatedFactoryData.factoryName,
             factoryWidth: updatedFactoryData.width,
             factoryHeight: updatedFactoryData.height,
@@ -245,7 +233,7 @@ export default function FactoryDialog({
     });
   };
 
-  const handleCriteriaChange = (metric, field, value) => {
+  const handleCriteriaChange = useCallback((metric, field, value) => {
     if (selectedMachine === 'factory') {
       // Update factory criteria
       setFactoryCriteria(prev => ({
@@ -268,20 +256,20 @@ export default function FactoryDialog({
         }
       }));
     }
-  };
+  }, [selectedMachine, factoryCriteria, machineCriteria, setFactoryCriteria, setMachineCriteria]);
 
-  const getCurrentCriteria = () => {
+  const getCurrentCriteria = useMemo(() => {
     if (selectedMachine === 'factory') {
       return factoryCriteria;
     }
     return machineCriteria[selectedMachine] || { ...DEFAULT_CRITERIA };
-  };
+  }, [selectedMachine, factoryCriteria, machineCriteria]);
 
-  const handleCopySettings = () => {
-    const currentSettings = getCurrentCriteria();
+  const handleCopySettings = useCallback(() => {
+    const currentSettings = getCurrentCriteria;
     setCopiedSettings(JSON.parse(JSON.stringify(currentSettings)));
     setCopySuccess(true);
-  };
+  }, [getCurrentCriteria]);
 
   const handlePasteSettings = () => {
     if (!copiedSettings) return;
@@ -298,7 +286,7 @@ export default function FactoryDialog({
   };
 
   const handleApplyToAll = () => {
-    const currentSettings = getCurrentCriteria();
+    const currentSettings = getCurrentCriteria;
     const settings = JSON.parse(JSON.stringify(currentSettings));
     
     // Get all machine IDs
@@ -322,8 +310,8 @@ export default function FactoryDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Factory className="h-5 w-5 text-slate-600" />
-            {isEditMode ? "編輯工廠" : "新增工廠"}
-          </DialogTitle>
+          {isEditMode ? "編輯工廠" : "新增工廠"}
+        </DialogTitle>
           <DialogDescription>
             {isEditMode 
               ? "編輯工廠資訊和設定警告條件" 
@@ -343,9 +331,9 @@ export default function FactoryDialog({
                 <div className="space-y-2">
                   <Label htmlFor="factoryName">工廠名稱</Label>
                   <Input
-                    id="factoryName"
-                    value={factoryName}
-                    onChange={(e) => setFactoryName(e.target.value)}
+            id="factoryName"
+            value={factoryName}
+            onChange={(e) => setFactoryName(e.target.value)}
                     placeholder="輸入工廠名稱"
                     required
                   />
@@ -355,11 +343,11 @@ export default function FactoryDialog({
                   <div className="space-y-2">
                     <Label htmlFor="factoryWidth">寬</Label>
                     <Input
-                      id="factoryWidth"
+              id="factoryWidth"
                       type="number"
                       min="1"
-                      value={width}
-                      onChange={(e) => setWidth(e.target.value)}
+              value={width}
+              onChange={(e) => setWidth(e.target.value)}
                       placeholder="工廠寬度"
                       required
                     />
@@ -367,11 +355,11 @@ export default function FactoryDialog({
                   <div className="space-y-2">
                     <Label htmlFor="factoryHeight">長</Label>
                     <Input
-                      id="factoryHeight"
+              id="factoryHeight"
                       type="number"
                       min="1"
-                      value={height}
-                      onChange={(e) => setHeight(e.target.value)}
+              value={height}
+              onChange={(e) => setHeight(e.target.value)}
                       placeholder="工廠長度"
                       required
                     />
@@ -467,15 +455,15 @@ export default function FactoryDialog({
                       </Label>
                       <Switch
                         id="temp-enabled"
-                        checked={getCurrentCriteria().temperature?.enabled || false}
+                        checked={getCurrentCriteria.temperature?.enabled || false}
                         onCheckedChange={(checked) => handleCriteriaChange('temperature', 'enabled', checked)}
                       />
                     </div>
                     
-                    {getCurrentCriteria().temperature?.enabled && (
+                    {getCurrentCriteria.temperature?.enabled && (
                       <div className="grid grid-cols-2 gap-2">
                         <Select
-                          value={getCurrentCriteria().temperature?.condition || 'exceeds'}
+                          value={getCurrentCriteria.temperature?.condition || 'exceeds'}
                           onValueChange={(value) => handleCriteriaChange('temperature', 'condition', value)}
                         >
                           <SelectTrigger>
@@ -489,7 +477,7 @@ export default function FactoryDialog({
                         
                         <Input
                           type="number"
-                          value={getCurrentCriteria().temperature?.value || 80}
+                          value={getCurrentCriteria.temperature?.value || 80}
                           onChange={(e) => handleCriteriaChange('temperature', 'value', parseFloat(e.target.value))}
                           min="0"
                           step="0.1"
@@ -515,15 +503,15 @@ export default function FactoryDialog({
                       </Label>
                       <Switch
                         id="pressure-enabled"
-                        checked={getCurrentCriteria().pressure?.enabled || false}
+                        checked={getCurrentCriteria.pressure?.enabled || false}
                         onCheckedChange={(checked) => handleCriteriaChange('pressure', 'enabled', checked)}
                       />
                     </div>
                     
-                    {getCurrentCriteria().pressure?.enabled && (
+                    {getCurrentCriteria.pressure?.enabled && (
                       <div className="grid grid-cols-2 gap-2">
                         <Select
-                          value={getCurrentCriteria().pressure?.condition || 'exceeds'}
+                          value={getCurrentCriteria.pressure?.condition || 'exceeds'}
                           onValueChange={(value) => handleCriteriaChange('pressure', 'condition', value)}
                         >
                           <SelectTrigger>
@@ -537,7 +525,7 @@ export default function FactoryDialog({
                         
                         <Input
                           type="number"
-                          value={getCurrentCriteria().pressure?.value || 100}
+                          value={getCurrentCriteria.pressure?.value || 100}
                           onChange={(e) => handleCriteriaChange('pressure', 'value', parseFloat(e.target.value))}
                           min="0"
                           step="0.1"
@@ -570,15 +558,15 @@ export default function FactoryDialog({
                             </Label>
                             <Switch
                               id="cycle-enabled"
-                              checked={getCurrentCriteria().cycleTime?.enabled || false}
+                              checked={getCurrentCriteria.cycleTime?.enabled || false}
                               onCheckedChange={(checked) => handleCriteriaChange('cycleTime', 'enabled', checked)}
                             />
                           </div>
                           
-                          {getCurrentCriteria().cycleTime?.enabled && (
+                          {getCurrentCriteria.cycleTime?.enabled && (
                             <div className="grid grid-cols-2 gap-2">
                               <Select
-                                value={getCurrentCriteria().cycleTime?.condition || 'exceeds'}
+                                value={getCurrentCriteria.cycleTime?.condition || 'exceeds'}
                                 onValueChange={(value) => handleCriteriaChange('cycleTime', 'condition', value)}
                               >
                                 <SelectTrigger>
@@ -592,7 +580,7 @@ export default function FactoryDialog({
                               
                               <Input
                                 type="number"
-                                value={getCurrentCriteria().cycleTime?.value || 30}
+                                value={getCurrentCriteria.cycleTime?.value || 30}
                                 onChange={(e) => handleCriteriaChange('cycleTime', 'value', parseFloat(e.target.value))}
                                 min="0"
                                 step="0.1"
@@ -616,15 +604,15 @@ export default function FactoryDialog({
                             </Label>
                             <Switch
                               id="melt-enabled"
-                              checked={getCurrentCriteria().meltTemperature?.enabled || false}
+                              checked={getCurrentCriteria.meltTemperature?.enabled || false}
                               onCheckedChange={(checked) => handleCriteriaChange('meltTemperature', 'enabled', checked)}
                             />
                           </div>
                           
-                          {getCurrentCriteria().meltTemperature?.enabled && (
+                          {getCurrentCriteria.meltTemperature?.enabled && (
                             <div className="grid grid-cols-2 gap-2">
                               <Select
-                                value={getCurrentCriteria().meltTemperature?.condition || 'exceeds'}
+                                value={getCurrentCriteria.meltTemperature?.condition || 'exceeds'}
                                 onValueChange={(value) => handleCriteriaChange('meltTemperature', 'condition', value)}
                               >
                                 <SelectTrigger>
@@ -637,8 +625,8 @@ export default function FactoryDialog({
                               </Select>
                               
                               <Input
-                                type="number"
-                                value={getCurrentCriteria().meltTemperature?.value || 200}
+              type="number"
+                                value={getCurrentCriteria.meltTemperature?.value || 200}
                                 onChange={(e) => handleCriteriaChange('meltTemperature', 'value', parseFloat(e.target.value))}
                                 min="0"
                                 step="0.1"
@@ -664,6 +652,20 @@ export default function FactoryDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+      </Dialog>
   );
-}
+};
+
+FactoryDialog.propTypes = {
+  open: PropTypes.bool,
+  handleClose: PropTypes.func,
+  factory: PropTypes.object,
+  factoryIndex: PropTypes.number,
+  setFactories: PropTypes.func,
+  isEditMode: PropTypes.bool,
+  setIsEdit: PropTypes.func,
+  setFactoryDialogState: PropTypes.func,
+  setMachineDialogState: PropTypes.func,
+};
+
+export default React.memo(FactoryDialog);

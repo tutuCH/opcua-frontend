@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { sanitizeInput } from '../utils/validation';
+
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 // Helper function to get the authorization headers
@@ -113,8 +115,8 @@ export const insertMachine = async (createMachineReq) => {
     createMachineReq;
   try {
     const requestBody = {
-      machineIpAddress,
-      machineName,
+      machineIpAddress: sanitizeInput(machineIpAddress),
+      machineName: sanitizeInput(machineName),
       machineIndex,
       factoryId,
       factoryIndex,
@@ -148,7 +150,7 @@ export const createFactory = async (updateMachineReq) => {
   const { factoryName, factoryIndex, width, height } = updateMachineReq;
   try {
     const requestBody = {
-      factoryName,
+      factoryName: sanitizeInput(factoryName),
       factoryIndex,
       width,
       height,
@@ -168,7 +170,7 @@ export const updateFactory = async (updateFactoryReq) => {
   const { factoryName, factoryIndex, width, height, factoryId } = updateFactoryReq;
   try {
     const requestBody = {
-      factoryName,
+      factoryName: sanitizeInput(factoryName),
       factoryIndex,
       width,
       height,

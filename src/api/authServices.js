@@ -1,25 +1,21 @@
 import axios from 'axios';
 import { axiosErrorHandler } from '../utils/utils';
+import { sanitizeInput } from '../utils/validation';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export const userLogin = async (email, password) => {
   try {
+    // Sanitize inputs before sending to backend
+    const sanitizedEmail = sanitizeInput(email);
+    const sanitizedPassword = sanitizeInput(password);
+    
     // Send the login request to the backend
-    // const response = await axios.post(`${BACKEND_URL}/auth/login`, {
-    //   email,
-    //   password
-    // });
-    const response = {
-      status: 200,
-      data: {
-        access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInVzZXJuYW1lIjoiaGFycnl0Y2giLCJlbWFpbCI6InR1Y2hlbmhzaWVuQGdtYWlsLmNvbSIsImFjY2Vzc0xldmVsIjoiIiwiaWF0IjoxNzQxMjM1MzYwLCJleHAiOjE3NDE4NDAxNjB9.gFurPjH2VB5_0Wd8V8ggJjFb_sk88_OArxDHPDaZmow",
-        userId: "1",
-        email: "tuchenhsien@gmail.com",
-        accessLevel: "",
-        username: "harrytch"
-      }
-    }
+    const response = await axios.post(`${BACKEND_URL}/auth/login`, {
+      email: sanitizedEmail,
+      password: sanitizedPassword
+    });
+
     // Assuming the response contains an access_token
     const { access_token, userId, username } = response.data;
 
@@ -44,11 +40,16 @@ export const userLogin = async (email, password) => {
 
 export const userSignup = async (email, password, username) => {
   try {
+    // Sanitize inputs before sending to backend
+    const sanitizedEmail = sanitizeInput(email);
+    const sanitizedPassword = sanitizeInput(password);
+    const sanitizedUsername = sanitizeInput(username);
+    
     // Send the signup request to the backend
     const response = await axios.post(`${BACKEND_URL}/auth/sign-up`, {
-      email,
-      password,
-      username
+      email: sanitizedEmail,
+      password: sanitizedPassword,
+      username: sanitizedUsername
     });
     // Assuming the response contains an access_token after signup
     const { status, message } = response.data;
@@ -84,10 +85,13 @@ export const userVerifyEmail = async (token) => {
 
 export const userForgetPassword = async (email) => {
   try {
-    // Send the signup request to the backend
+    // Sanitize input before sending to backend
+    const sanitizedEmail = sanitizeInput(email);
+    
+    // Send the forget password request to the backend
     console.log('forget password');
     const response = await axios.post(`${BACKEND_URL}/auth/forget-password`, {
-      email
+      email: sanitizedEmail
     });
     console.log('success: ', JSON.stringify(response));
     const { status, message } = response.data;
