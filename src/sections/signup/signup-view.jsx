@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
@@ -21,6 +21,7 @@ export default function SignupView() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigationTimeoutRef = useRef(null);
 
   const PAGE_STATUS = {
     SIGN_UP: 1,
@@ -39,6 +40,15 @@ export default function SignupView() {
       handleVerifyEmail(token);
     }
   }, [searchParams]);
+
+  // Cleanup timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (navigationTimeoutRef.current) {
+        clearTimeout(navigationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleClick = async () => {
     if (password !== confirmPassword) {
@@ -66,7 +76,7 @@ export default function SignupView() {
       const { status } = await userVerifyEmail(token);
       if (status === 'success') {
         setPageState(PAGE_STATUS.VERIFY_EMAIL_SUCCESS);
-        setTimeout(() => {
+        navigationTimeoutRef.current = setTimeout(() => {
           navigate('/');
         }, 2000); // Redirect after 2 seconds
       } else {

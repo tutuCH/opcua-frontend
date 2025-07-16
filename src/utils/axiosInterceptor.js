@@ -1,15 +1,35 @@
 // src/utils/axiosInterceptor.js
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { TokenManager } from './tokenSecurity';
 
 export const setupAxiosInterceptors = () => {
+  // Request interceptor to add token and validate
+  axios.interceptors.request.use(
+    (config) => {
+      const token = localStorage.getItem('access_token');
+      
+      if (token) {
+        if (TokenManager.isTokenExpired(token)) {
+          TokenManager.clearAuthData();
+          window.location.href = '/login';
+          return Promise.reject(new Error('Token expired'));
+        }
+        
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  // Response interceptor for 401 handling
   axios.interceptors.response.use(
     (response) => response,
     (error) => {
       if (error.response && error.response.status === 401) {
-        localStorage.removeItem('access_token'); // Optionally remove the token
-        const navigate = useNavigate();
-        navigate('/login', { replace: true });
+        TokenManager.clearAuthData();
+        window.location.href = '/login';
       }
       return Promise.reject(error);
     }
