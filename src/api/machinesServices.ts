@@ -1,10 +1,20 @@
 import axios from 'axios';
 import { sanitizeInput } from '../utils/validation';
+import type {
+  CreateMachineRequest,
+  UpdateMachineRequest,
+  CreateFactoryRequest,
+  UpdateFactoryRequest,
+  FactoriesMachinesResponse,
+  OPCUAConnectionRequest,
+  OPCUAConnectionResponse,
+  ApiResponse
+} from '../types';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000') as string;
 
 // Helper function to get the authorization headers
-const getAuthHeaders = () => {
+const getAuthHeaders = (): { Authorization: string; 'Content-Type': string } => {
   const token = localStorage.getItem('access_token');
   return {
     'Authorization': `Bearer ${token}`,
@@ -12,7 +22,7 @@ const getAuthHeaders = () => {
   };
 };
 
-export const getFactoriesMachinesByUserId = async () => {
+export const getFactoriesMachinesByUserId = async (): Promise<FactoriesMachinesResponse> => {
   try {
     // const response = await axios.get(`${BACKEND_URL}/machines/factories-machines`, {
     //   headers: getAuthHeaders(),
@@ -78,9 +88,9 @@ export const getFactoriesMachinesByUserId = async () => {
   }
 };
 
-export const connectByIpAddress = async (ipAddress) => {
+export const connectByIpAddress = async (ipAddress: string): Promise<OPCUAConnectionResponse> => {
   try {
-    const requestBody = {
+    const requestBody: OPCUAConnectionRequest = {
       endpoint: ipAddress,
     };
     const response = await axios.post(`${BACKEND_URL}/opcua/connect`, requestBody, {
@@ -94,9 +104,9 @@ export const connectByIpAddress = async (ipAddress) => {
   }
 };
 
-export const disconnectByIpAddress = async (ipAddress) => {
+export const disconnectByIpAddress = async (ipAddress: string): Promise<OPCUAConnectionResponse> => {
   try {
-    const requestBody = {
+    const requestBody: OPCUAConnectionRequest = {
       endpoint: ipAddress,
     };
     const response = await axios.post(`${BACKEND_URL}/opcua/disconnect`, requestBody, {
@@ -110,7 +120,7 @@ export const disconnectByIpAddress = async (ipAddress) => {
   }
 };
 
-export const insertMachine = async (createMachineReq) => {
+export const insertMachine = async (createMachineReq: CreateMachineRequest): Promise<ApiResponse> => {
   const { machineIpAddress, machineName, machineIndex, factoryId, factoryIndex } =
     createMachineReq;
   try {
@@ -133,7 +143,7 @@ export const insertMachine = async (createMachineReq) => {
   }
 };
 
-export const removeMachine = async (machineId) => {
+export const removeMachine = async (machineId: string): Promise<ApiResponse> => {
   try {
     const response = await axios.delete(`${BACKEND_URL}/machines/${machineId}`, {
       headers: getAuthHeaders(),
@@ -146,7 +156,7 @@ export const removeMachine = async (machineId) => {
   }
 };
 
-export const createFactory = async (updateMachineReq) => {
+export const createFactory = async (updateMachineReq: CreateFactoryRequest): Promise<ApiResponse> => {
   const { factoryName, factoryIndex, width, height } = updateMachineReq;
   try {
     const requestBody = {
@@ -166,7 +176,7 @@ export const createFactory = async (updateMachineReq) => {
   }
 };
 
-export const updateFactory = async (updateFactoryReq) => {
+export const updateFactory = async (updateFactoryReq: UpdateFactoryRequest): Promise<ApiResponse> => {
   const { factoryName, factoryIndex, width, height, factoryId } = updateFactoryReq;
   try {
     const requestBody = {
@@ -186,7 +196,7 @@ export const updateFactory = async (updateFactoryReq) => {
   }
 };
 
-export const removeFactory = async (factoryId) => {
+export const removeFactory = async (factoryId: string): Promise<ApiResponse> => {
   try {
     const response = await axios.delete(`${BACKEND_URL}/factories/${factoryId}`, {
       headers: getAuthHeaders(),
@@ -199,7 +209,7 @@ export const removeFactory = async (factoryId) => {
   }
 };
 
-export const updateMachineIndex = async (updateMachineReq) => {
+export const updateMachineIndex = async (updateMachineReq: UpdateMachineRequest): Promise<ApiResponse> => {
   const { machineId, machineIndex, factoryId } = updateMachineReq;
   try {
     const response = await axios.post(`${BACKEND_URL}/machines/update-index`,{
@@ -216,17 +226,3 @@ export const updateMachineIndex = async (updateMachineReq) => {
     throw error;
   }
 }  
-
-// export const updateMachineIndex = async (updateMachineReq) => {
-//   const { machineId, machineIndex, factoryId } = updateMachineReq;
-//   try {
-//     const response = await axios.patch(`${BACKEND_URL}/machines/update-index/${machineId}/${machineIndex}/${factoryId}`,{}, {
-//       headers: getAuthHeaders(),
-//     });
-//     const data = response.data;
-//     return data;
-//   } catch (error) {
-//     console.error('Error updating machine index:', error);
-//     throw error;
-//   }
-// }  

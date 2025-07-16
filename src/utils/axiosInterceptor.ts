@@ -1,11 +1,12 @@
-// src/utils/axiosInterceptor.js
-import axios from 'axios';
+// src/utils/axiosInterceptor.ts
+import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { TokenManager } from './tokenSecurity';
+import type { ApiError } from '../types';
 
-export const setupAxiosInterceptors = () => {
+export const setupAxiosInterceptors = (): void => {
   // Request interceptor to add token and validate
   axios.interceptors.request.use(
-    (config) => {
+    (config: AxiosRequestConfig) => {
       const token = localStorage.getItem('access_token');
       
       if (token) {
@@ -20,13 +21,13 @@ export const setupAxiosInterceptors = () => {
       
       return config;
     },
-    (error) => Promise.reject(error)
+    (error: AxiosError) => Promise.reject(error)
   );
 
   // Response interceptor for 401 handling
   axios.interceptors.response.use(
-    (response) => response,
-    (error) => {
+    (response: AxiosResponse) => response,
+    (error: AxiosError<ApiError>) => {
       if (error.response && error.response.status === 401) {
         TokenManager.clearAuthData();
         window.location.href = '/login';

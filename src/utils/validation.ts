@@ -2,8 +2,27 @@
 import { useState } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
 
+type ValidationFunction = (value: string) => string | null;
+type ValidationRule = ValidationFunction | ValidationFunction[];
+
+interface ValidationRules {
+  [key: string]: ValidationRule;
+}
+
+interface FormValidationResult {
+  values: Record<string, string>;
+  errors: Record<string, string | null>;
+  touched: Record<string, boolean>;
+  handleChange: (name: string, value: string) => void;
+  handleBlur: (name: string) => void;
+  validateForm: () => boolean;
+  resetForm: () => void;
+  setValues: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  setErrors: React.Dispatch<React.SetStateAction<Record<string, string | null>>>;
+}
+
 // Email validation
-export const validateEmail = (email) => {
+export const validateEmail = (email: string): string | null => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email) return 'Email is required';
   if (!emailRegex.test(email)) return 'Please enter a valid email address';
@@ -11,7 +30,7 @@ export const validateEmail = (email) => {
 };
 
 // Password validation
-export const validatePassword = (password) => {
+export const validatePassword = (password: string): string | null => {
   if (!password) return 'Password is required';
   if (password.length < 8) return 'Password must be at least 8 characters long';
   if (!/(?=.*[a-z])/.test(password)) return 'Password must contain at least one lowercase letter';
@@ -22,14 +41,14 @@ export const validatePassword = (password) => {
 };
 
 // Password confirmation validation
-export const validatePasswordConfirmation = (password, confirmPassword) => {
+export const validatePasswordConfirmation = (password: string, confirmPassword: string): string | null => {
   if (!confirmPassword) return 'Please confirm your password';
   if (password !== confirmPassword) return 'Passwords do not match';
   return null;
 };
 
 // Factory name validation
-export const validateFactoryName = (name) => {
+export const validateFactoryName = (name: string): string | null => {
   if (!name) return 'Factory name is required';
   if (name.length < 2) return 'Factory name must be at least 2 characters long';
   if (name.length > 50) return 'Factory name must be less than 50 characters';
@@ -38,7 +57,7 @@ export const validateFactoryName = (name) => {
 };
 
 // Machine name validation
-export const validateMachineName = (name) => {
+export const validateMachineName = (name: string): string | null => {
   if (!name) return 'Machine name is required';
   if (name.length < 2) return 'Machine name must be at least 2 characters long';
   if (name.length > 50) return 'Machine name must be less than 50 characters';
@@ -47,7 +66,7 @@ export const validateMachineName = (name) => {
 };
 
 // IP address validation
-export const validateIpAddress = (ip) => {
+export const validateIpAddress = (ip: string): string | null => {
   if (!ip) return 'IP address is required';
   const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
   if (!ipRegex.test(ip)) return 'Please enter a valid IP address';
@@ -55,7 +74,7 @@ export const validateIpAddress = (ip) => {
 };
 
 // Numeric value validation
-export const validateNumericValue = (value, fieldName, min = 1, max = 9999) => {
+export const validateNumericValue = (value: string, fieldName: string, min: number = 1, max: number = 9999): string | null => {
   if (!value) return `${fieldName} is required`;
   const numValue = parseInt(value, 10);
   if (Number.isNaN(numValue)) return `${fieldName} must be a number`;
@@ -65,13 +84,13 @@ export const validateNumericValue = (value, fieldName, min = 1, max = 9999) => {
 };
 
 // Input sanitization
-export const sanitizeInput = (input) => {
+export const sanitizeInput = (input: string): string => {
   if (typeof input !== 'string') return input;
   return DOMPurify.sanitize(input.trim());
 };
 
 // Username validation
-export const validateUsername = (username) => {
+export const validateUsername = (username: string): string | null => {
   if (!username) return 'Username is required';
   if (username.length < 3) return 'Username must be at least 3 characters long';
   if (username.length > 20) return 'Username must be less than 20 characters';
@@ -80,7 +99,7 @@ export const validateUsername = (username) => {
 };
 
 // Generic required field validation
-export const validateRequired = (value, fieldName) => {
+export const validateRequired = (value: string, fieldName: string): string | null => {
   if (!value || (typeof value === 'string' && value.trim() === '')) {
     return `${fieldName} is required`;
   }
@@ -88,12 +107,12 @@ export const validateRequired = (value, fieldName) => {
 };
 
 // Form validation hook
-export const useFormValidation = (initialValues, validationRules) => {
-  const [values, setValues] = useState(initialValues);
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
+export const useFormValidation = (initialValues: Record<string, string>, validationRules: ValidationRules): FormValidationResult => {
+  const [values, setValues] = useState<Record<string, string>>(initialValues);
+  const [errors, setErrors] = useState<Record<string, string | null>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  const validateField = (name, value) => {
+  const validateField = (name: string, value: string): string | null => {
     const rule = validationRules[name];
     if (!rule) return null;
     
@@ -104,7 +123,7 @@ export const useFormValidation = (initialValues, validationRules) => {
     return rule(value);
   };
 
-  const validateForm = () => {
+  const validateForm = (): boolean => {
     const newErrors = {};
     Object.keys(validationRules).forEach(name => {
       const error = validateField(name, values[name]);
@@ -114,7 +133,7 @@ export const useFormValidation = (initialValues, validationRules) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (name, value) => {
+  const handleChange = (name: string, value: string): void => {
     const sanitizedValue = sanitizeInput(value);
     setValues(prev => ({ ...prev, [name]: sanitizedValue }));
     
@@ -124,13 +143,13 @@ export const useFormValidation = (initialValues, validationRules) => {
     }
   };
 
-  const handleBlur = (name) => {
+  const handleBlur = (name: string): void => {
     setTouched(prev => ({ ...prev, [name]: true }));
     const error = validateField(name, values[name]);
     setErrors(prev => ({ ...prev, [name]: error }));
   };
 
-  const resetForm = () => {
+  const resetForm = (): void => {
     setValues(initialValues);
     setErrors({});
     setTouched({});

@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button } from "src/components/ui/button";
 import navConfig from "./config-navigation";
 
 // Wrapped in React.memo to avoid unnecessary re-renders on mobile.

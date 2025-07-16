@@ -5,20 +5,20 @@ import { addDays, format, subDays } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { Button } from "src/components/ui/button"
+import { Calendar } from "src/components/ui/calendar"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "src/components/ui/popover"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "src/components/ui/select"
 
 export default function AdvancedDatePicker({ className, onRangeChange }) {
   const [date, setDate] = React.useState({

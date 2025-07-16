@@ -1,7 +1,14 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import PropTypes from 'prop-types';
 import { createFactory, updateFactory } from 'src/api/machinesServices';
 import { Factory, Thermometer, Gauge, AlertTriangle, Copy, Clipboard, Check } from 'lucide-react';
+import type { 
+  Factory as FactoryType, 
+  WarningCriteria, 
+  CriteriaConfig, 
+  InputChangeEvent, 
+  FormSubmitEvent, 
+  ButtonClickEvent 
+} from 'src/types';
 
 import {
   Dialog,
@@ -10,25 +17,25 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "src/components/ui/dialog";
+import { Input } from "src/components/ui/input";
+import { Label } from "src/components/ui/label";
+import { Button } from "src/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "src/components/ui/tabs";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+} from "src/components/ui/select";
+import { Switch } from "src/components/ui/switch";
 import { 
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "src/components/ui/accordion";
 import {
   Card,
   CardContent,
@@ -36,11 +43,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from "src/components/ui/card";
+import { Badge } from "src/components/ui/badge";
 
 // Default warning criteria template
-const DEFAULT_CRITERIA = {
+const DEFAULT_CRITERIA: WarningCriteria = {
   temperature: { enabled: false, condition: 'exceeds', value: 80 },
   pressure: { enabled: false, condition: 'exceeds', value: 100 },
   cycleTime: { enabled: false, condition: 'exceeds', value: 30 },
@@ -49,7 +56,19 @@ const DEFAULT_CRITERIA = {
   screwRpm: { enabled: false, condition: 'exceeds', value: 100 },
 };
 
-const FactoryDialog = ({
+interface FactoryDialogProps {
+  open: boolean;
+  handleClose: () => void;
+  factoryIndex: number;
+  isEditMode: boolean;
+  factories: FactoryType[];
+  setFactories: React.Dispatch<React.SetStateAction<FactoryType[]>>;
+  setIsEdit: React.Dispatch<React.SetStateAction<boolean>>;
+  setFactoryDialogState: React.Dispatch<React.SetStateAction<boolean[]>>;
+  setMachineDialogState: React.Dispatch<React.SetStateAction<boolean[]>>;
+}
+
+const FactoryDialog: React.FC<FactoryDialogProps> = ({
   open,
   handleClose,
   factoryIndex,
@@ -60,18 +79,18 @@ const FactoryDialog = ({
   setFactoryDialogState,
   setMachineDialogState
 }) => {
-  const [factoryName, setFactoryName] = useState('');
-  const [width, setWidth] = useState('');
-  const [height, setHeight] = useState('');
-  const [activeTab, setActiveTab] = useState('factory');
-  const [selectedMachine, setSelectedMachine] = useState('factory');
-  const [factoryCriteria, setFactoryCriteria] = useState(DEFAULT_CRITERIA);
-  const [machineCriteria, setMachineCriteria] = useState({});
-  const [copiedSettings, setCopiedSettings] = useState(null);
-  const [copySuccess, setCopySuccess] = useState(false);
-  const [pasteSuccess, setPasteSuccess] = useState(false);
+  const [factoryName, setFactoryName] = useState<string>('');
+  const [width, setWidth] = useState<string>('');
+  const [height, setHeight] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<string>('factory');
+  const [selectedMachine, setSelectedMachine] = useState<string>('factory');
+  const [factoryCriteria, setFactoryCriteria] = useState<WarningCriteria>(DEFAULT_CRITERIA);
+  const [machineCriteria, setMachineCriteria] = useState<Record<string, WarningCriteria>>({});
+  const [copiedSettings, setCopiedSettings] = useState<WarningCriteria | null>(null);
+  const [copySuccess, setCopySuccess] = useState<boolean>(false);
+  const [pasteSuccess, setPasteSuccess] = useState<boolean>(false);
   
-  const userId = localStorage.getItem('user_id');
+  const userId = localStorage.getItem('user_id') || '';
 
   // Use effect to set values when isEditMode or factoryIndex changes
   useEffect(() => {
@@ -87,7 +106,7 @@ const FactoryDialog = ({
       }
       
       // Load machine-specific warning criteria if they exist
-      const machineSettings = {};
+      const machineSettings: Record<string, WarningCriteria> = {};
       if (factory.machines && factory.machines.length > 0) {
         factory.machines.forEach(machine => {
           if (machine.warningCriteria) {
@@ -128,7 +147,7 @@ const FactoryDialog = ({
     }
   }, [copySuccess, pasteSuccess]);
 
-  const handleCreateFactory = async (event) => {
+  const handleCreateFactory = async (event: FormSubmitEvent): Promise<void> => {
     event.preventDefault();
     
     const createNewFactoryRes = await createFactory({ 
@@ -168,7 +187,7 @@ const FactoryDialog = ({
     setMachineDialogState((prevMachineDialogState) => [...prevMachineDialogState, false]);
   };
 
-  const handleUpdateFactory = async (event) => {
+  const handleUpdateFactory = async (event: FormSubmitEvent): Promise<void> => {
     event.preventDefault();
     
     const factoryId = factories[factoryIndex].factoryId;
@@ -333,7 +352,7 @@ const FactoryDialog = ({
                   <Input
             id="factoryName"
             value={factoryName}
-            onChange={(e) => setFactoryName(e.target.value)}
+            onChange={(e: InputChangeEvent) => setFactoryName(e.target.value)}
                     placeholder="輸入工廠名稱"
                     required
                   />
@@ -347,7 +366,7 @@ const FactoryDialog = ({
                       type="number"
                       min="1"
               value={width}
-              onChange={(e) => setWidth(e.target.value)}
+              onChange={(e: InputChangeEvent) => setWidth(e.target.value)}
                       placeholder="工廠寬度"
                       required
                     />
@@ -359,7 +378,7 @@ const FactoryDialog = ({
                       type="number"
                       min="1"
               value={height}
-              onChange={(e) => setHeight(e.target.value)}
+              onChange={(e: InputChangeEvent) => setHeight(e.target.value)}
                       placeholder="工廠長度"
                       required
                     />
@@ -656,16 +675,5 @@ const FactoryDialog = ({
   );
 };
 
-FactoryDialog.propTypes = {
-  open: PropTypes.bool,
-  handleClose: PropTypes.func,
-  factory: PropTypes.object,
-  factoryIndex: PropTypes.number,
-  setFactories: PropTypes.func,
-  isEditMode: PropTypes.bool,
-  setIsEdit: PropTypes.func,
-  setFactoryDialogState: PropTypes.func,
-  setMachineDialogState: PropTypes.func,
-};
 
 export default React.memo(FactoryDialog);

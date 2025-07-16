@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 
 import Iconify from 'src/components/iconify';
 import { Download } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from 'src/components/ui/popover';
 
 import {
   flexRender,
@@ -14,8 +14,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from 'src/components/ui/button';
+import { Checkbox } from 'src/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -25,7 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from 'src/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
+import { Input } from 'src/components/ui/input';
 import {
   Table,
   TableBody,
@@ -33,7 +33,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from 'src/components/ui/table';
 
 import { injectionMachine as data } from 'src/_mock/injectionMachine';
 
