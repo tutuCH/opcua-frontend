@@ -4,8 +4,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from "src/components/ui/card";
+import { Badge } from "src/components/ui/badge";
 import { 
   AlertCircle, 
   AlertTriangle, 
@@ -19,7 +19,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "src/components/ui/accordion";
 import { demoWarnings } from "src/_mock/demo-warning";
 
 // to do: change to backend

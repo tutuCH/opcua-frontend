@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "src/components/ui/tabs"
 import MachineRawTable from "./machine-raw-table";
 import MachineCharts from "./machine-charts";
 

@@ -1,35 +1,27 @@
 import { useState } from 'react';
-import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
-import Card from '@mui/material/Card';
-import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
-import IconButton from '@mui/material/IconButton';
-import LoadingButton from '@mui/lab/LoadingButton';
-import { alpha, useTheme } from '@mui/material/styles';
-import InputAdornment from '@mui/material/InputAdornment';
+import { Button } from 'src/components/ui/button';
+import { Card, CardContent } from 'src/components/ui/card';
+import { Input } from 'src/components/ui/input';
+import { Eye, EyeOff } from 'lucide-react';
+import { cn } from 'src/lib/utils';
 
 import { useRouter } from 'src/routes/hooks';
 import { userLogin } from 'src/api/authServices';
-import { bgGradient } from 'src/theme/css';
 import { useFormValidation, validateEmail, validateRequired } from 'src/utils/validation';
 
 import Logo from 'src/components/logo';
 import Iconify from 'src/components/iconify';
+import type { InputChangeEvent, ButtonClickEvent } from 'src/types';
 
 export default function LoginView() {
-  const theme = useTheme();
   const router = useRouter();
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleClick = async () => {
+  const handleClick = async (): Promise<void> => {
     setLoading(true);
     try {
       const token = await userLogin(email, password);
@@ -49,50 +41,66 @@ export default function LoginView() {
 
   const renderForm = (
     <>
-      <Stack spacing={3}>
-        <TextField
-          name="email"
-          label="Email address"
-          value={email}
-          type='email'
-          onChange={(e) => setEmail(e.target.value)}
-        />
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium mb-2">
+            Email address
+          </label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            value={email}
+            onChange={(e: InputChangeEvent) => setEmail(e.target.value)}
+            className="w-full"
+          />
+        </div>
 
-        <TextField
-          name="password"
-          label="Password"
-          type={showPassword ? 'text' : 'password'}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
-                  <Iconify icon={showPassword ? 'eva:eye-fill' : 'eva:eye-off-fill'} />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-        />
-      </Stack>
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium mb-2">
+            Password
+          </label>
+          <div className="relative">
+            <Input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e: InputChangeEvent) => setPassword(e.target.value)}
+              className="w-full pr-10"
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2"
+              onClick={(e: ButtonClickEvent) => {
+                e.preventDefault();
+                setShowPassword(!showPassword);
+              }}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+        </div>
+      </div>
 
-      <Stack direction="row" alignItems="center" justifyContent="flex-end" sx={{ my: 3 }}>
-        <Link variant="subtitle2" underline="hover" onClick={() => router.push('/forget-password')}>
+      <div className="flex justify-end my-6">
+        <button
+          type="button"
+          className="text-sm text-blue-600 hover:text-blue-800 underline"
+          onClick={() => router.push('/forget-password')}
+        >
           Forgot password?
-        </Link>
-      </Stack>
+        </button>
+      </div>
 
-      <LoadingButton
-        fullWidth
-        size="large"
-        type="submit"
-        variant="contained"
-        color="inherit"
-        loading={loading}
+      <Button
+        className="w-full"
+        size="lg"
+        disabled={loading}
         onClick={handleClick}
       >
-        Login
-      </LoadingButton>
+        {loading ? 'Loading...' : 'Login'}
+      </Button>
     </>
   );
 

@@ -1,14 +1,13 @@
 /* eslint-disable perfectionist/sort-imports */
 import 'src/global.css';
 import { useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
 import Lottie from 'lottie-react';
 import welcomeAnimation from 'src/assets/welcome.json';
 
 import { useScrollToTop } from 'src/hooks/use-scroll-to-top';
 
 import Router from 'src/routes/sections';
-import ThemeProvider from 'src/theme';
+import { ThemeProvider } from 'src/components/theme-provider';
 import ErrorBoundary from 'src/components/ErrorBoundary';
 
 // ----------------------------------------------------------------------
@@ -29,20 +28,7 @@ export default function App() {
     <ErrorBoundary>
       <ThemeProvider>
         {isLoading ? (
-          <Box
-            sx={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: 'background.default',
-              zIndex: 9999,
-            }}
-          >
+          <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
             <Lottie
               animationData={welcomeAnimation}
               style={{
@@ -50,7 +36,7 @@ export default function App() {
                 height: 200,
               }}
             />
-          </Box>
+          </div>
         ) : (
           <Router />
         )}

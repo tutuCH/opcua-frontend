@@ -1,17 +1,23 @@
 import axios from 'axios';
 import { axiosErrorHandler } from '../utils/utils';
 import { sanitizeInput } from '../utils/validation';
+import type { 
+  LoginResponse, 
+  SignupResponse, 
+  VerifyEmailResponse, 
+  ResetPasswordResponse 
+} from '../types';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000') as string;
 
-export const userLogin = async (email, password) => {
+export const userLogin = async (email: string, password: string): Promise<string> => {
   try {
     // Sanitize inputs before sending to backend
     const sanitizedEmail = sanitizeInput(email);
     const sanitizedPassword = sanitizeInput(password);
     
     // Send the login request to the backend
-    const response = await axios.post(`${BACKEND_URL}/auth/login`, {
+    const response = await axios.post<LoginResponse>(`${BACKEND_URL}/auth/login`, {
       email: sanitizedEmail,
       password: sanitizedPassword
     });
@@ -34,11 +40,12 @@ export const userLogin = async (email, password) => {
     return access_token;
 
   } catch (error) {
-    return axiosErrorHandler(error);
+    axiosErrorHandler(error);
+    throw error;
   }
 };
 
-export const userSignup = async (email, password, username) => {
+export const userSignup = async (email: string, password: string, username: string): Promise<SignupResponse> => {
   try {
     // Sanitize inputs before sending to backend
     const sanitizedEmail = sanitizeInput(email);
@@ -46,7 +53,7 @@ export const userSignup = async (email, password, username) => {
     const sanitizedUsername = sanitizeInput(username);
     
     // Send the signup request to the backend
-    const response = await axios.post(`${BACKEND_URL}/auth/sign-up`, {
+    const response = await axios.post<SignupResponse>(`${BACKEND_URL}/auth/sign-up`, {
       email: sanitizedEmail,
       password: sanitizedPassword,
       username: sanitizedUsername
@@ -56,15 +63,15 @@ export const userSignup = async (email, password, username) => {
     return {status, message};
 
   } catch (error) {
-    return axiosErrorHandler(error);
+    axiosErrorHandler(error);
+    throw error;
   }
 };
 
-export const userVerifyEmail = async (token) => {
+export const userVerifyEmail = async (token: string): Promise<VerifyEmailResponse> => {
   try {
     // Send the signup request to the backend
-    const response = await axios.get(`${BACKEND_URL}/auth/verify-email?token=${token}`, {
-    });
+    const response = await axios.get<VerifyEmailResponse>(`${BACKEND_URL}/auth/verify-email?token=${token}`);
     // Assuming the response contains an access_token after signup
     const { userId, access_token, status, message, email, username } = response.data;
     const expirationDate = new Date();
@@ -76,21 +83,22 @@ export const userVerifyEmail = async (token) => {
     localStorage.setItem('token_expiration', expirationDate.toISOString());
     localStorage.setItem('email', email);
     localStorage.setItem('username', username);
-    return { userId, access_token, status, message };
+    return { userId, access_token, status, message, email, username };
 
   } catch (error) {
-    return axiosErrorHandler(error);
+    axiosErrorHandler(error);
+    throw error;
   }
 };
 
-export const userForgetPassword = async (email) => {
+export const userForgetPassword = async (email: string): Promise<SignupResponse> => {
   try {
     // Sanitize input before sending to backend
     const sanitizedEmail = sanitizeInput(email);
     
     // Send the forget password request to the backend
     console.log('forget password');
-    const response = await axios.post(`${BACKEND_URL}/auth/forget-password`, {
+    const response = await axios.post<SignupResponse>(`${BACKEND_URL}/auth/forget-password`, {
       email: sanitizedEmail
     });
     console.log('success: ', JSON.stringify(response));
@@ -105,10 +113,10 @@ export const userForgetPassword = async (email) => {
   }
 }
 
-export const userResetPassword = async (token, password) => {
+export const userResetPassword = async (token: string, password: string): Promise<ResetPasswordResponse> => {
   try {
     // Send the signup request to the backend
-    const response = await axios.post(`${BACKEND_URL}/auth/reset-password/${token}`, {
+    const response = await axios.post<ResetPasswordResponse>(`${BACKEND_URL}/auth/reset-password/${token}`, {
       password
     });
     // Assuming the response contains an access_token
@@ -126,6 +134,7 @@ export const userResetPassword = async (token, password) => {
     // Optionally, you can return the token or some other response data if needed
     return { access_token, userId, status, message };    
   } catch (error) {
-    return axiosErrorHandler(error);
+    axiosErrorHandler(error);
+    throw error;
   }
 }

@@ -6,7 +6,7 @@ import { HelmetProvider } from 'react-helmet-async';
 
 // Import shadcn ThemeProvider
 import { ThemeProvider } from "@/components/theme-provider";
-// import { Toaster } from "@/components/ui/toaster";
+// import { Toaster } from "src/components/ui/toaster";
 
 import App from './app';
 import { setupAxiosInterceptors } from 'src/utils/axiosInterceptor';  // Setup Axios interceptors

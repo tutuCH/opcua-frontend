@@ -3,7 +3,10 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 
 // ----------------------------------------------------------------------
 
-export function useResponsive(query, start, end) {
+type ResponsiveQuery = 'up' | 'down' | 'between' | 'only';
+type BreakpointKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
+export function useResponsive(query: ResponsiveQuery, start: BreakpointKey, end?: BreakpointKey): boolean {
   const theme = useTheme();
 
   const mediaUp = useMediaQuery(theme.breakpoints.up(start));
@@ -31,12 +34,12 @@ export function useResponsive(query, start, end) {
 
 // ----------------------------------------------------------------------
 
-export function useWidth() {
+export function useWidth(): BreakpointKey {
   const theme = useTheme();
-  const keys = [...theme.breakpoints.keys].reverse();
+  const keys = [...theme.breakpoints.keys].reverse() as BreakpointKey[];
   
   // Create all media queries outside the reducer to follow React hooks rules
-  const mediaQueries = keys.map(key => ({
+  const mediaQueries = keys.map((key: BreakpointKey) => ({
     key,
     matches: useMediaQuery(theme.breakpoints.up(key))
   }));

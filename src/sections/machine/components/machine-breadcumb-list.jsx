@@ -7,7 +7,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
+} from 'src/components/ui/breadcrumb';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
   DropdownMenuGroup,
-} from "@/components/ui/dropdown-menu"
+} from "src/components/ui/dropdown-menu"
 import {
   Command,
   CommandEmpty,
@@ -24,7 +24,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
+} from "src/components/ui/command"
 import { Link } from "react-router-dom";
 
 export default function MachineBreadcumbList({ factories, selectedMachine, belongsToFactory, factoryIndex, setSelectedMachine, setBelongsToFactory }) {

@@ -15,22 +15,22 @@ import {
   RefreshCw, 
   Info, 
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from 'src/components/ui/button';
 import FactoryDialog from './factory-dialog';
 import MachineDialog from './machine-dialog';
 import MachineStatusCard from './machine-status-card';
-import { Card } from '@/components/ui/card';
+import { Card } from 'src/components/ui/card';
 import LoadingSkeleton from '@/components/loadingSkeleton/loadingSkeleton';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from 'src/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from 'src/components/ui/select';
 import { useParams } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from 'src/components/ui/badge';
 
 export default function Factory() {
   const [factories, setFactories] = useState([]);

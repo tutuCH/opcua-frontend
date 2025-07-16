@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 import { Wifi, WifiOff, AlertTriangle, AlertCircle, X } from 'lucide-react';
 import { removeMachine } from 'src/api/machinesServices';
 import { useDrag } from 'react-dnd';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from 'src/components/ui/tooltip';
+import { Button } from 'src/components/ui/button';
+import { Card } from 'src/components/ui/card';
 
 const ItemTypes = {
   MACHINE: 'machine',
