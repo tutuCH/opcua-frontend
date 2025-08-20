@@ -1,4 +1,4 @@
-import Factory from '../factory';
+import Factory from '../factory.tsx';
 import PostSearch from '../post-search';
 
 // ----------------------------------------------------------------------

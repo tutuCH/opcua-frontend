@@ -4,11 +4,15 @@ import { Outlet, Navigate, useRoutes } from 'react-router-dom';
 
 import DashboardLayout from 'src/layouts/dashboard';
 import AuthMiddleware from 'src/components/AuthMiddleware';
+import SubscriptionProtectedRoute from 'src/components/SubscriptionProtectedRoute';
 
 export const FactoryPage = lazy(() => import('src/pages/factory'));
 export const MachinePage = lazy(() => import('src/pages/machine'));
 export const RecordsPage = lazy(() => import('src/pages/records'));
 export const WarningsPage = lazy(() => import('src/pages/warnings'));
+export const SettingsPage = lazy(() => import('src/pages/settings'));
+export const SubscriptionSuccessPage = lazy(() => import('src/pages/subscription-success'));
+export const SubscriptionCancelPage = lazy(() => import('src/pages/subscription-cancel'));
 export const LoginPage = lazy(() => import('src/pages/login'));
 export const SignupPage = lazy(() => import('src/pages/signup'));
 export const ForgetPasswordPage = lazy(() => import('src/pages/forgotPassword'));
@@ -29,13 +33,21 @@ export default function Router() {
         </AuthMiddleware>
       ),
       children: [
-        { element: <FactoryPage />, index: true },
-        { path: 'factory', element: <FactoryPage /> },
-        { path: 'factory/:factoryId', element: <FactoryPage /> },
-        { path: 'machine', element: <MachinePage /> },
-        { path: 'machine/:machineId', element: <MachinePage /> },
-        { path: 'records', element: <RecordsPage /> },
-        { path: 'warnings', element: <WarningsPage /> },
+        {
+          element: <SubscriptionProtectedRoute />,
+          children: [
+            { element: <FactoryPage />, index: true },
+            { path: 'factory', element: <FactoryPage /> },
+            { path: 'factory/:factoryId', element: <FactoryPage /> },
+            { path: 'machine', element: <MachinePage /> },
+            { path: 'machine/:machineId', element: <MachinePage /> },
+            { path: 'records', element: <RecordsPage /> },
+            { path: 'warnings', element: <WarningsPage /> },
+          ],
+        },
+        { path: 'settings', element: <SettingsPage /> },
+        { path: 'subscription/success', element: <SubscriptionSuccessPage /> },
+        { path: 'subscription/cancel', element: <SubscriptionCancelPage /> },
       ],
     },
     {

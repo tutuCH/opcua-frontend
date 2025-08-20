@@ -2,6 +2,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { TokenManager } from '../utils/tokenSecurity';
 import { userLogin, userSignup } from '../api/authServices';
+import { subscriptionApi } from '../api/subscriptionServices';
 import type { User, AuthContextType, SignupResponse } from '../types';
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -26,10 +27,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     // Check authentication status on mount with proper token validation
-    const checkAuth = (): void => {
+    const checkAuth = async (): Promise<void> => {
       if (TokenManager.isAuthenticated()) {
         setIsAuthenticated(true);
-        setUser(TokenManager.getCurrentUser());
+        const currentUser = TokenManager.getCurrentUser();
+        
+        try {
+          // Fetch latest subscription data
+          const subscription = await subscriptionApi.getCurrentSubscription();
+          const userWithSubscription: User = {
+            ...currentUser,
+            subscriptionStatus: subscription?.status as User['subscriptionStatus'],
+            subscriptionId: subscription?.id,
+            planType: subscription?.plan.interval === 'month' ? 'monthly' : 'yearly',
+            subscriptionEndDate: subscription && subscription.currentPeriodEnd 
+              ? new Date(subscription.currentPeriodEnd * 1000).toISOString() 
+              : undefined,
+          };
+          setUser(userWithSubscription);
+        } catch (error) {
+          console.warn('Failed to fetch subscription data (backend may not be running):', error);
+          // Set user without subscription data if API is not available
+          const userWithoutSubscription: User = {
+            ...currentUser,
+            subscriptionStatus: 'inactive',
+            subscriptionId: undefined,
+            planType: undefined,
+            subscriptionEndDate: undefined,
+          };
+          setUser(userWithoutSubscription);
+        }
       } else {
         setIsAuthenticated(false);
         setUser(null);
@@ -78,6 +105,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setTokenWarning(null);
   };
 
+  const refreshUserData = async (): Promise<void> => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const currentUser = TokenManager.getCurrentUser();
+      const subscription = await subscriptionApi.getCurrentSubscription();
+      const userWithSubscription: User = {
+        ...currentUser,
+        subscriptionStatus: subscription?.status as User['subscriptionStatus'],
+        subscriptionId: subscription?.id,
+        planType: subscription?.plan.interval === 'month' ? 'monthly' : 'yearly',
+        subscriptionEndDate: subscription && subscription.currentPeriodEnd 
+          ? new Date(subscription.currentPeriodEnd * 1000).toISOString() 
+          : undefined,
+      };
+      setUser(userWithSubscription);
+    } catch (error) {
+      console.warn('Failed to refresh user data (backend may not be running):', error);
+      // Set user without subscription data if API is not available
+      const currentUser = TokenManager.getCurrentUser();
+      const userWithoutSubscription: User = {
+        ...currentUser,
+        subscriptionStatus: 'inactive',
+        subscriptionId: undefined,
+        planType: undefined,
+        subscriptionEndDate: undefined,
+      };
+      setUser(userWithoutSubscription);
+    }
+  };
+
+  const hasActiveSubscription = Boolean(
+    user?.subscriptionStatus && ['active', 'trialing'].includes(user.subscriptionStatus)
+  );
+
   return (
     <AuthContext.Provider value={{ 
       isAuthenticated, 
@@ -85,7 +147,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       login, 
       signup,
       logout,
-      loading
+      loading,
+      hasActiveSubscription,
+      refreshUserData
     }}>
       {children}
     </AuthContext.Provider>

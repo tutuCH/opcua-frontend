@@ -5,9 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Development Commands
 
 ### Core Commands
-- **Start development server:** `yarn dev` or `npm run dev`
+- **Start development server:** `yarn dev` or `npm run dev` (runs on port 3030)
+- **Start with host access:** `yarn dev:host` (for network access)
 - **Build for production:** `yarn build` or `npm run build`
-- **Preview production build:** `yarn preview` or `npm run preview`
+- **Preview production build:** `yarn preview` or `npm run preview` (runs on port 3030)
 
 ### Code Quality
 - **Lint code:** `yarn lint` or `npm run lint`
@@ -59,6 +60,16 @@ src/
 - Protected routes using AuthMiddleware wrapper
 - Automatic logout on 401 responses via Axios interceptor
 
+### Subscription & Billing
+- **Stripe Checkout Integration**: Uses prebuilt Stripe Checkout pages for subscriptions
+- **Customer Portal**: Stripe-hosted portal for subscription management
+- **Subscription Plans**: Basic ($9.99), Professional ($29.99), Enterprise ($99.99) monthly plans
+- **API Endpoints**: 
+  - `POST /api/subscription/create-checkout-session` - Create Stripe Checkout session
+  - `POST /api/subscription/create-portal-session` - Access customer portal
+- **Callback Pages**: Success (`/subscription/success`) and Cancel (`/subscription/cancel`) handling
+- **Lookup Keys**: Uses descriptive keys like `basic_monthly`, `professional_monthly`, `enterprise_monthly`
+
 ### API Integration
 - Base URL configured via `VITE_BACKEND_URL` environment variable
 - RESTful endpoints for factory/machine operations
@@ -94,5 +105,52 @@ src/
 - Manual testing approach
 
 ### Environment Variables
-- `VITE_BACKEND_URL`: Backend API base URL
-- Configure in `.env.local` for local development
+- `VITE_BACKEND_URL`: Backend API base URL (default: http://localhost:3000)
+- `VITE_COGNITO_*`: AWS Cognito authentication configuration
+- `VITE_SIGN_IN_URL` / `VITE_SIGN_OUT_URL`: Authentication redirect URLs
+- `VITE_STRIPE_PUBLISHABLE_KEY`: Stripe publishable key for Checkout sessions
+- `VITE_STRIPE_SECRET_KEY`: Stripe secret key (server-side only, not used in frontend)
+- Configure in `.env.local` for local development (`.env` contains defaults)
+
+### Important File Paths
+- **Path aliases:** `@/` and `src/` point to the src directory
+- **TypeScript:** Strict mode enabled with comprehensive type checking
+- **Port configuration:** Development server runs on port 3030 (not 3000)
+- **Backend Integration:** See `BACKEND_INTEGRATION.md` for detailed API specifications
+
+## Sample MQTT Data
+
+### Injection Molding Machine Data Structure
+```json
+{
+  "devId": "C02",
+  "topic": "realtime", 
+  "sendTime": "2025-08-01 10:49:21",
+  "sendStamp": 1754016561000,
+  "time": "2025-08-01 10:49:20",
+  "timestamp": 1754016560000,
+  "Data": {
+    "ATST": 0,    // Auto Test Status (0=disabled, 1=enabled)
+    "OPM": -1,    // Operation Mode (-1=stopped, 0=manual, 1=auto, 2=setup)
+    "STS": 1,     // System Status (0=offline, 1=online, 2=error, 3=warning)
+    "T1": 0,      // Temperature Zone 1 (°C)
+    "T2": 0,      // Temperature Zone 2 (°C) 
+    "T3": 0,      // Temperature Zone 3 (°C)
+    "T4": 0,      // Temperature Zone 4 (°C)
+    "T5": 0,      // Temperature Zone 5 (°C)
+    "T6": 0,      // Temperature Zone 6 (°C)
+    "T7": 0       // Temperature Zone 7 (°C)
+  }
+}
+```
+
+**Data Field Explanations:**
+- `devId`: Machine/Device identifier (e.g., "C02" = Machine C02)
+- `topic`: MQTT topic type ("realtime" for live data streams)
+- `sendTime`/`sendStamp`: When data was transmitted from machine
+- `time`/`timestamp`: When data was collected at machine level
+- `Data.ATST`: Auto-test functionality status
+- `Data.OPM`: Current operational mode of the machine
+- `Data.STS`: Overall machine status indicator
+- `Data.T1-T7`: Temperature readings from 7 heating zones in injection molding barrel
+- testing account: abc@gmail.com, password: abc123
