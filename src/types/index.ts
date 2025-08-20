@@ -129,12 +129,18 @@ export interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   loading: boolean;
+  hasActiveSubscription: boolean;
+  refreshUserData: () => Promise<void>;
 }
 
 export interface User {
   id: string;
   email: string;
   username: string;
+  subscriptionStatus?: 'active' | 'inactive' | 'canceled' | 'past_due' | 'trialing';
+  subscriptionId?: string;
+  planType?: 'monthly' | 'yearly';
+  subscriptionEndDate?: string;
 }
 
 // Utility Types
@@ -231,4 +237,70 @@ export interface AsyncState<T> {
   data: T | null;
   status: Status;
   error: string | null;
+}
+
+// Subscription Types
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  interval: 'month' | 'year';
+  features: string[];
+  stripePlanId: string;
+}
+
+export interface CreateSubscriptionRequest {
+  planId: string;
+  paymentMethodId: string;
+}
+
+export interface CreateSubscriptionResponse {
+  subscriptionId: string;
+  clientSecret?: string;
+  status: string;
+}
+
+export interface UpdateSubscriptionRequest {
+  subscriptionId: string;
+  planId?: string;
+}
+
+export interface CancelSubscriptionRequest {
+  subscriptionId: string;
+  immediately?: boolean;
+}
+
+export interface SubscriptionResponse {
+  id: string;
+  status: string;
+  currentPeriodStart: number;
+  currentPeriodEnd: number;
+  plan: {
+    id: string;
+    amount: number;
+    currency: string;
+    interval: string;
+  };
+}
+
+export interface PaymentMethod {
+  id: string;
+  type: string;
+  card?: {
+    brand: string;
+    last4: string;
+    expiryMonth: number;
+    expiryYear: number;
+  };
+}
+
+export interface SubscriptionContextType {
+  subscription: SubscriptionResponse | null;
+  paymentMethods: PaymentMethod[];
+  isLoading: boolean;
+  createSubscription: (request: CreateSubscriptionRequest) => Promise<CreateSubscriptionResponse>;
+  updateSubscription: (request: UpdateSubscriptionRequest) => Promise<void>;
+  cancelSubscription: (request: CancelSubscriptionRequest) => Promise<void>;
+  refreshSubscription: () => Promise<void>;
 }

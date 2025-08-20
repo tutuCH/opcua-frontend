@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 import App from './app';
 import { setupAxiosInterceptors } from 'src/utils/axiosInterceptor';  // Setup Axios interceptors
+import { AuthProvider } from 'src/contexts/AuthContext';
 
 // ----------------------------------------------------------------------
 
@@ -22,11 +23,13 @@ root.render(
     <BrowserRouter>
       {/* Add ThemeProvider for shadcn UI theming support */}
       <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-        <Suspense>
-          <App />
-          {/* Add Toaster component for notifications */}
-          {/* <Toaster /> */}
-        </Suspense>
+        <AuthProvider>
+          <Suspense>
+            <App />
+            {/* Add Toaster component for notifications */}
+            {/* <Toaster /> */}
+          </Suspense>
+        </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   </HelmetProvider>

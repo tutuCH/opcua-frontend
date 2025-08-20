@@ -1,9 +1,18 @@
 import { useState } from 'react';
-import { Button } from 'src/components/ui/button';
-import { Card, CardContent } from 'src/components/ui/card';
+import { 
+  Box, 
+  Stack, 
+  Typography, 
+  Link, 
+  Divider, 
+  Card,
+  Button,
+  alpha 
+} from '@mui/material';
 import { Input } from 'src/components/ui/input';
 import { Eye, EyeOff } from 'lucide-react';
-import { cn } from 'src/lib/utils';
+import { useTheme } from '@mui/material/styles';
+import { bgGradient } from 'src/theme/css';
 
 import { useRouter } from 'src/routes/hooks';
 import { userLogin } from 'src/api/authServices';
@@ -15,6 +24,7 @@ import type { InputChangeEvent, ButtonClickEvent } from 'src/types';
 
 export default function LoginView() {
   const router = useRouter();
+  const theme = useTheme();
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
@@ -33,6 +43,7 @@ export default function LoginView() {
         alert('Login failed. Please check your credentials.');
       }
     } catch (error) {
+      console.error('Login error:', error);
       alert('An error occurred during login. Please try again.');
     } finally {
       setLoading(false);
@@ -94,10 +105,12 @@ export default function LoginView() {
       </div>
 
       <Button
-        className="w-full"
-        size="lg"
+        fullWidth
+        size="large"
+        variant="contained"
         disabled={loading}
         onClick={handleClick}
+        sx={{ mt: 3, mb: 2 }}
       >
         {loading ? 'Loading...' : 'Login'}
       </Button>
