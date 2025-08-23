@@ -5,12 +5,12 @@ import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 
 // Import shadcn ThemeProvider
+import { setupAxiosInterceptors } from 'src/utils/axiosInterceptor';  // Setup Axios interceptors
+import { AuthProvider } from 'src/contexts/AuthContext';
 import { ThemeProvider } from "@/components/theme-provider";
 // import { Toaster } from "src/components/ui/toaster";
 
 import App from './app';
-import { setupAxiosInterceptors } from 'src/utils/axiosInterceptor';  // Setup Axios interceptors
-import { AuthProvider } from 'src/contexts/AuthContext';
 
 // ----------------------------------------------------------------------
 

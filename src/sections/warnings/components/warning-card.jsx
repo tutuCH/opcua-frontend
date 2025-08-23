@@ -58,7 +58,7 @@ const WarningCard = ({ warning }) => {
   // If no warning is provided, use the first demo warning
   const warningData = warning || demoWarnings[0];
   
-  const { CHINESE, COLOR, ICON, BADGE_COLOR } = SEVERITY_LEVEL[warningData.severity] || SEVERITY_LEVEL["MEDIUM"];
+  const { CHINESE, COLOR, ICON, BADGE_COLOR } = SEVERITY_LEVEL[warningData.severity] || SEVERITY_LEVEL.MEDIUM;
 
   return (
     <Card className={`border-l-4 ${COLOR.split(' ')[2]} mb-4 shadow-sm hover:shadow-md transition-shadow h-fit`}>

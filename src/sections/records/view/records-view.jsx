@@ -271,8 +271,7 @@ export default function RecordsPage() {
             {table
               .getAllColumns()
               .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
+              .map((column) => (
                   <div key={column.id} className="flex items-center space-x-2">
                     <Checkbox
                       className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
@@ -287,8 +286,7 @@ export default function RecordsPage() {
                       {column.id}
                     </label>
                   </div>
-                );
-              })}
+                ))}
           </PopoverContent>
         </Popover>
       </div>
@@ -297,15 +295,13 @@ export default function RecordsPage() {
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
+                {headerGroup.headers.map((header) => (
                     <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
-                  );
-                })}
+                  ))}
               </TableRow>
             ))}
           </TableHeader>

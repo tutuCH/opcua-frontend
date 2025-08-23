@@ -33,14 +33,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "src/components/ui/tabs"
 
 // Process data for charts
-const processData = (data) => {
+const processData = (data) => 
   // Convert timestamps to Date objects and sort by time
-  return data.map(entry => ({
+   data.map(entry => ({
     ...entry,
     formattedTime: format(new Date(entry.Timestamp), "MM/dd HH:mm"),
     Date: new Date(entry.Timestamp)
-  })).sort((a, b) => a.Timestamp - b.Timestamp);
-};
+  })).sort((a, b) => a.Timestamp - b.Timestamp)
+;
 
 // Group data by machine ID
 const groupByMachine = (data) => {
@@ -270,7 +270,7 @@ export default function MachineCharts() {
                     data={errorDistribution}
                     cx="50%"
                     cy="50%"
-                    labelLine={true}
+                    labelLine
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="value"

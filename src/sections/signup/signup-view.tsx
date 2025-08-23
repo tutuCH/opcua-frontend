@@ -42,13 +42,11 @@ export default function SignupView() {
   }, [searchParams]);
 
   // Cleanup timeout on component unmount
-  useEffect(() => {
-    return () => {
+  useEffect(() => () => {
       if (navigationTimeoutRef.current) {
         clearTimeout(navigationTimeoutRef.current);
       }
-    };
-  }, []);
+    }, []);
 
   const handleClick = async () => {
     if (password !== confirmPassword) {

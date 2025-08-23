@@ -41,7 +41,7 @@ export default function MachineBreadcumbList({ factories, selectedMachine, belon
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link key={`/factory`} to={`/factory`}>
+            <Link key="/factory" to="/factory">
               全部工廠
             </Link>
           </BreadcrumbLink>

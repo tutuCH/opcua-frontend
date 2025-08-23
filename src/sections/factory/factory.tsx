@@ -16,11 +16,7 @@ import {
   Info, 
 } from 'lucide-react';
 import { Button } from 'src/components/ui/button';
-import FactoryDialog from './factory-dialog';
-import MachineDialog from './machine-dialog';
-import MachineStatusCard from './machine-status-card';
 import { Card } from 'src/components/ui/card';
-import LoadingSkeleton from '@/components/loadingSkeleton/loadingSkeleton';
 import { ScrollArea, ScrollBar } from 'src/components/ui/scroll-area';
 import {
   Select,
@@ -31,6 +27,10 @@ import {
 } from 'src/components/ui/select';
 import { useParams } from 'react-router-dom';
 import { Badge } from 'src/components/ui/badge';
+import LoadingSkeleton from '@/components/loadingSkeleton/loadingSkeleton';
+import MachineStatusCard from './machine-status-card';
+import MachineDialog from './machine-dialog';
+import FactoryDialog from './factory-dialog';
 
 export default function Factory() {
   const [factories, setFactories] = useState([]);
@@ -227,19 +227,19 @@ export default function Factory() {
             {/* Legend */}
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm">
               <div className="flex items-center gap-1">
-                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-green-400 ring-2 ring-green-200"></div>
+                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-green-400 ring-2 ring-green-200" />
                 <span>Online</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-gray-400 ring-2 ring-gray-200"></div>
+                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-gray-400 ring-2 ring-gray-200" />
                 <span>Offline</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-amber-400 ring-2 ring-amber-200"></div>
+                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-amber-400 ring-2 ring-amber-200" />
                 <span>Warning</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-red-400 ring-2 ring-red-200"></div>
+                <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-red-400 ring-2 ring-red-200" />
                 <span>Error</span>
               </div>
             </div>
@@ -271,8 +271,7 @@ export default function Factory() {
                   style={{ 
                     backgroundImage: 'linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)',
                     backgroundSize: '20px 20px'
-                  }}>
-                </div>
+                  }} />
                 
                 <div className="relative">
                   {/* Column headers */}
@@ -324,7 +323,7 @@ export default function Factory() {
                             {matchingMachine ? (
                               <div className="relative h-full w-full">
                                 {/* Machine Shadow Effect */}
-                                <div className="absolute -inset-0.5 rounded-md bg-black/5"></div>
+                                <div className="absolute -inset-0.5 rounded-md bg-black/5" />
                                 <MachineStatusCard
                                   key={matchingMachine.machineId}
                                   machineIndex={matchingMachine.machineIndex}
@@ -384,8 +383,7 @@ export default function Factory() {
     );
   };
 
-  const SelectFactoryComponent = () => {
-    return (
+  const SelectFactoryComponent = () => (
       <div className="flex justify-between items-center mb-4">
         <Select onValueChange={(value) => handleSelectFactory(parseInt(value, 10))}>
           <SelectTrigger className="w-[180px]">
@@ -408,7 +406,6 @@ export default function Factory() {
         </Select>
       </div>
     );
-  };
 
   const handleSelectFactory = (factoryIndex) => {
     setSelectedFactoryIndex(factoryIndex);

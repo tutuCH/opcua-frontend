@@ -1,187 +1,291 @@
-# Real-time production status (運轉狀態畫面)
+# Product Requirement Design: OPC-UA Dashboard
 
-What data are shown. Machine status by color, current utilization, latest cycle time, current shot count, current molding condition name and mold name, plus indication of whether setpoints changed.&#x20;
+## 1. Introduction
 
-Chart type. A live “tile grid”/card dashboard per machine with small KPI badges and color status.
-
-How to optimize.
-
-* Use a color-blind-safe palette and encode state with shape/labels, not color alone.
-* Add sparklines for last 60 minutes of cycle time and shot rate on each tile.
-* Surface “changed setpoints” with a pill badge and link to the condition-change diff.
-* Let users pin critical machines and group tiles by line, mold family, or material.
-* Provide latency badges (data age) and a subtle alarm banner when alarms exist.
-* Virtualize rendering for >60 tiles; poll at 2–5s, but downsample to 10–15s render cadence to keep the UI smooth.
+This document outlines the product requirements and design for the OPC-UA Dashboard. It serves as a central resource for all stakeholders to understand the project's goals, features, and success metrics.
 
 ---
 
-# “24-hour quality” view
+## 2. Vision and Goals
 
-What data are shown. Quality metrics over the last 24h, visible stability/variation, suspected causes of degradation, current molding conditions, and “expert know-how” context.&#x20;
+The OPC-UA Dashboard aims to provide a user-friendly interface for monitoring and managing industrial machines that use the OPC-UA protocol. The dashboard will enable users to view real-time data, track machine performance, and receive timely warnings about potential issues.
 
-Chart type. Time-series panel (one or more lines) with thresholds; optionally SPC overlays.
+### Success Metrics
 
-How to optimize.
-
-* Use SPC bands (target ± spec, ±1/2/3σ).
-* Add automatic regime change markers when conditions or molds change.
-* Provide dual y-axes only if units differ drastically; otherwise normalize to z-scores and stack.
-* Offer binning (1/5/15-minute) and outlier toggles; default to robust smoothing (e.g., median over 5 points).
-* Add brush-and-zoom and link to the “Summary/Overview” timeline for the same window.
+* **Usability:** Intuitive and easy for both technical and non-technical users.
+* **Reliability:** Accurate, up-to-date information with minimal downtime.
+* **Scalability:** Handle a growing number of machines and users without performance degradation.
 
 ---
 
-# Daily / Weekly / Monthly reports (日报・周报・月报)
+## 3. Features
 
-What data are shown. For each machine, mold, and condition: shot counts, defect counts/rates, utilization, and rollups by day, then aggregated to week and month. Stored for one year; calendar/date picker to retrieve.&#x20;
+### 3.1 User Authentication
 
-Chart/table type. Tabular report with KPIs; optional small bar/line charts per row.
+* **Sign-up:** Clean form (username, email, password, show/hide toggle). Link to Terms/Privacy. Auto-login on success.
+* **Login:** Email + password, “Remember me”, “Forgot password”. Redirect to dashboard.
+* **Password Recovery:** Email link → reset form.
+* **Protected Routes:** Redirect unauthorized users with message.
 
-How to optimize.
+### 3.2 Factory Dashboard
 
-* Pin key columns (date, machine, mold, condition).
-* Add conditional formatting for defect rate and utilization thresholds.
-* Provide subtotal rows by mold and condition; add drill-through to the 24h quality and “Summary” charts.
-* Export to CSV/XLSX with the same filters; keep totals visible when scrolled (sticky footer).
-* For weekly/monthly, add small multiples: stacked bars by defect category and a line for utilization.
+* **Overview:** Grid of machine cards: status (green/yellow/red), name, key KPI (production rate).
+* **Status:** Real-time updates; hover tooltips.
+* **Navigation:** Click card → machine detail page.
 
----
+### 3.3 Machine Dashboard
 
-# Detailed shot records (实绩的详细书面)
+* **Detailed View:** Header + breadcrumb. Sections: real-time, history, details.
+* **Real-time Data:** Gauges, charts, numerical readouts.
+* **Historical Data:** Line/bar charts with ranges (1h/24h/7d), zoom/pan.
 
-What data are shown. Every shot’s measured items (up to 30 custom items/machine): temperatures, times, positions, pressures, speeds, etc.; system can hold \~4.5 million shots.&#x20;
+### 3.4 Records and History
 
-Chart/table type. Large fact table plus time-series detail when a row is selected.
+* **Logging:** All data saved to DB. “Records” page to view.
+* **Analysis:** Filterable table by machine/date/parameter. Sortable.
+* **Export:** CSV/PDF export.
 
-How to optimize.
+### 3.5 Warnings and Notifications
 
-* Use column presets (Pressure/Speed/Position/Temperature groups).
-* Add row-level anomaly flags based on SPC/I-MR rules and highlight them.
-* Provide column histograms in headers for quick distribution peeks; enable range filters.
-* Offer downsampling (LTTB) for plotting thousands of points without losing shape.
-* Make time and shot number interchangeable x-axes for plots.
+* **Warning System:** Header bell, red dot if new warnings. Dropdown with timestamps.
+* **Notifications:** User profile → select categories + email alerts.
 
----
+### 3.6 Error Handling
 
-# Downtime reason log (停机原因履历 with PDA capture)
+* **404 Page:** Friendly message + Home link.
+* **Error Boundary:** Runtime error screen with “Reload” + “Contact Support”.
 
-What data are shown. Start/end time, duration, reason codes (machine, auxiliary, mold), notes; entry via PDA on the floor.&#x20;
+### 3.7 AI-Powered Assistant
 
-Chart/table type. Event table plus Pareto and timeline.
+* **Anomaly Detection:** Toast notifications with “View trend”, “Explain”.
+* **Recommendations:** Panel with suggestions, evidence, confidence levels.
+* **Predictive Maintenance:** Alerts with probability, component, “Create work order”.
+* **Natural Language Interface:** Chat widget for Q\&A and actions.
 
-How to optimize.
+### 3.8 Device Onboarding
 
-* Display a Pareto bar chart of downtime by category and by machine for the selected range.
-* Add a timeline lane per machine showing downtime blocks; color by category; click to edit notes.
-* Provide MTBF/MTTR cards and trend lines.
-* Ensure reason taxonomies are hierarchical and filterable.
+* Wizard: Broker credentials → topic discovery → field mapping → validation → naming.
+* Payload preview; health status indicators.
+* Device appears on dashboard within 10s after setup.
 
----
+### 3.9 Multi-Site and Hierarchy
 
-# Trend chart (趋势图形)
+* Site switcher in nav; filter by site/line.
+* Breadcrumbs show full hierarchy.
 
-What data are shown. Variation of injection-phase metrics across thousands of shots; emphasis on deviation over time.&#x20;
+### 3.10 OEE & KPI Snapshot
 
-Chart type. Time-series variance/line chart; can be shown as “value and deviation from target.”
+* OEE mini-badge on machine cards.
+* Factory header shows OEE, throughput, schedule adherence.
 
-How to optimize.
+### 3.11 Production Planning & Scheduling
 
-* Show target and control limits; annotate drifts and step changes.
-* Add an “overlay by mold/material” toggle to see stability differences when conditions switch.
-* Offer a “variance heat strip” under the line (higher intensity = larger deviation).
-* Enable “compare two time windows” with ghosting to validate improvements after changes.
+* **Kanban:** Pending, In Progress, Done. Drag cards.
+* **Gantt:** Timeline per machine, with conflicts flagged.
+* **Best Fit:** Suggest optimal machine based on status + history.
 
----
+### 3.12 Master Data
 
-# Correlation chart (相关图形)
+* Admin > Master Data: Parts, Molds, Materials, Tools.
+* Readiness states (Ready, Setup, Maintenance).
+* Scheduling blocked if “Maintenance” unless override reason given.
 
-What data are shown. Any two recorded items’ relationship, with ability to define acceptable ranges and click outliers to open their shot details.&#x20;
+### 3.13 Cell & Peripheral Integration
 
-Chart type. Scatter plot with optional density contours; quadrant thresholds.
+* Machine detail → “Cell” tab with peripherals.
+* Status pills (OK/Warning/Error).
+* Peripheral alarms propagate to main machine card.
 
-How to optimize.
+### 3.14 Alarm Triage & SOP Playbooks
 
-* Add brush selection that cross-filters the shot table and opens shot traces.
-* Provide regression fit (linear/LOESS) and R²; show Pearson/Spearman quickly.
-* Support coloring by mold/material/batch; shape by machine/shift.
-* Let users save “golden ranges” that also drive live alarms.
+* **Alarms Tab:** Clustered by type, with “Impact” badge.
+* **Playbooks:** Linked steps, notes, safety.
+* **Actions:** Acknowledge, assign, add note. Logged with user + timestamp.
 
----
+### 3.15 Maintenance & Work Orders
 
-# Summary/Overview timeline (总括图形)
+* “Maintenance” page with work orders (Open/In Progress/Closed).
+* Create WO directly from alert.
+* Charts for MTTR/MTBF.
 
-What data are shown. A 24-hour horizontal time axis showing machine operation states, quality signals, molding condition change history, alarms, stop reasons, and links to shot records. Clicking a region reveals details.&#x20;
+### 3.16 Quality, SPC & Traceability
 
-Chart type. Multi-lane event timeline (Gantt-like) with stacked metrics below.
+* SPC charts (X-bar/MR) for CT and key process variables.
+* Traceability filters: Part, Mold, Material Lot, Cavity, Operator, Shift.
+* Run reports downloadable per lot.
 
-How to optimize.
+### 3.17 Reports & Auto-Reporting
 
-* Use separate lanes: Operation state, Alarms, Condition changes, Downtime, and a compact quality KPI track.
-* Add synchronized vertical cursor across lanes; hover shows consolidated tooltips.
-* Provide “jump to” buttons: open the exact window in Trend/Correlation/Shot table.
-* Support mini-map for fast navigation; allow bookmarking a time interval.
+* Templates: Daily Production, Downtime Pareto, Alarm Summary, Parameter Drift.
+* Schedule daily/weekly emails with links + attachments.
+* Reports exportable as PDF/CSV/XLSX.
 
----
+### 3.18 RBAC & Audit Logs
 
-# Utilization within selected window
+* Admin > Roles with permission matrix.
+* Audit log of all user actions.
+* Disabled buttons show tooltips if permission missing.
 
-What data are shown. The utilization rate calculated for the exact time span selected on the Summary chart; also supports historical comparison.&#x20;
+### 3.19 MES/ERP Handoff
 
-Chart type. KPI tile + small donut/bar; optional comparison sparkline.
+* Admin > Integrations: Orders In, Completions Out.
+* API credentials + schema preview.
+* Activity tab: last sync, success/failure counts, retries.
 
-How to optimize.
+### 3.20 AI-Assisted Scheduling & What-If
 
-* Show absolute time in run/idle/alarm/stop buckets beside the percentage.
-* Enable “compare to last week same window” so improvements are obvious.
-* Color ranges should match the site’s OEE targets and be consistent across the app.
-
----
-
-# Equipment Gantt (设备甘特图) with real-time scheduling
-
-What data are shown. Machine-level schedule blocks for orders, planned mold maintenance, setup/changeover durations; late jobs indicated by color; generates instruction sheets; integrates real-time performance back into the plan.&#x20;
-
-Chart type. Classic Gantt chart with machine as rows and time on x-axis.
-
-How to optimize.
-
-* Encode job status by border style (planned/started/blocked/done) and lateness by fill.
-* Snap jobs to mold readiness and material availability; show soft/hard constraints icons.
-* Provide “what-if” mode with resource loading bars and clash warnings.
-* Attach KPIs to blocks (expected vs actual cycle time); late-risk forecast using current OEE.
-* Offer bulk actions (drag to shift; right-click to split; auto-resequence).
-
----
-
-# Traceability tables (材料／模具／成型／检验／组装／交货)
-
-What data are shown. Materials: name, code, batch, receipt date, supplier, quality info. Molding step: machine, product, mold, batch, date, quantity, condition. Inspection: dates, counts, defect rates, quality info. Assembly: dates, station/line, operator, outputs, defect rates. Delivery: due date, product, batch, instruction, operator, carrier. One-year retention.&#x20;
-
-Chart/table type. Linked master-detail tables with batch lineage.
-
-How to optimize.
-
-* Make lineage a first-class view: a Sankey/graph from material batch → mold → lots → shipments.
-* Add “batch health” score aggregating defect rates across downstream steps.
-* Provide QR/barcode search and exportable certificates (auto-compile relevant records).
-* Use row-level badges for quarantined/hold lots.
+* “What-If” panel on Schedule page.
+* Tweak assumptions → see ETA impact.
+* “Recommend sequence” rearranges jobs virtually.
+* Applying updates Gantt + audit log.
 
 ---
 
-# Multi-machine management (30 → 120 machines)
+## 4. Architecture and Technology Stack
 
-What data are shown. Hierarchical grouping by floor/group/server; same real-time indicators and drill-downs at scale; remote access via Web/i-mode for status and alarms.&#x20;
+* **Frontend:** React, TypeScript, Vite, Tailwind CSS.
+* **Routing:** React Router.
+* **Authentication:** JWT.
+* **Visualization:** Chart.js or similar.
+* **State:** React Context API or similar.
 
-Chart type. Hierarchical tree + tile grid and section-level rollup charts.
+**Additions:**
 
-How to optimize.
-
-* Show rollups at each node (avg utilization, alarms, WIP) with trend arrows.
-* Enable cross-site filters (mold/material/batch) and side-by-side site comparisons.
-* For mobile, collapse charts into tappable KPIs with quick alarm acknowledgements.
+* **Ingestion:** OPC UA client + MQTT subscriber.
+* **Data Stores:** Time-series DB (telemetry), relational DB (metadata, jobs, alarms, WOs).
+* **Realtime:** WebSocket/SSE for live cards, charts, toasts, AI.
+* **Reporting:** Server-side generator (PDF/CSV/XLSX).
+* **AI Services:** Anomaly detection, ETA forecast, SOP retrieval, chat agent.
+* **Integrations:** REST/GraphQL for MES/ERP; email service.
 
 ---
 
-## Cross-cutting visualization best practices for iii-System in your OPC-UA stack
+## 5. Future Enhancements
 
-Use consistent units and time zones, batch/lot and mold IDs as first-class filters, downsample time-series for responsiveness, and keep alarm colors consistent across all views. Add role-based presets (quality, production, maintenance). Implement brushing & linking between Summary ↔ Trend ↔ Correlation ↔ Shot table so one selection answers “what, when, why” in seconds.
+* Automated Process Control (with dual confirmation + rollback).
+* Robot/Peripheral recipe comparison.
+* Multi-language support (language switcher).
+* Customizable dashboards (drag/drop, save layouts).
+* Mobile companion app (alarms, WOs, schedule edits).
+
+---
+
+## 6. Visualization & Reporting Design
+
+Detailed chart and table specifications for all visualization modules.
+
+### 6.1 Real-Time Production Status (運轉狀態画面)
+
+* Machine status, utilization, cycle time, shot count, condition, mold name, setpoint changes.
+* **Tile grid dashboard** with KPIs.
+* Optimizations: sparklines, setpoint pills, latency badges, group by line/mold/material, >60 tiles virtualized.
+
+### 6.2 24-Hour Quality View
+
+* Metrics: defect rate, stability, degradation causes.
+* **Time-series with SPC overlays**.
+* Optimizations: regime markers, z-score normalization, brush & zoom, binning.
+
+### 6.3 Daily / Weekly / Monthly Reports
+
+* Shot counts, defects, utilization.
+* **KPI tables + embedded charts.**
+* Optimizations: subtotals, drill-through, exports, sticky columns.
+
+### 6.4 Detailed Shot Records
+
+* Up to 30 items per machine, \~4.5M shots.
+* **Fact table + time-series detail.**
+* Optimizations: anomaly flags, histograms, range filters, downsampling.
+
+### 6.5 Downtime Reason Log
+
+* Start/end, duration, reason codes, notes.
+* **Event table + Pareto + timeline.**
+* Optimizations: MTBF/MTTR KPIs, hierarchical filtering.
+
+### 6.6 Trend Chart
+
+* Injection metrics across thousands of shots.
+* **Time-series variance chart.**
+* Optimizations: control limits, overlays, heat strips, window comparisons.
+
+### 6.7 Correlation Chart
+
+* Scatter of two variables.
+* **Scatter plot with density contours.**
+* Optimizations: regression fit, cross-filter, golden ranges.
+
+### 6.8 Summary/Overview Timeline
+
+* 24h lanes: Operation, Alarms, Condition changes, Downtime, KPI.
+* **Multi-lane timeline.**
+* Optimizations: vertical cursor, mini-map, interval bookmarks.
+
+### 6.9 Utilization in Selected Window
+
+* Utilization % + absolute times.
+* **KPI tile + donut/bar.**
+* Optimizations: compare to last week, OEE thresholds.
+
+### 6.10 Equipment Gantt
+
+* Orders, maintenance, changeover blocks.
+* **Classic Gantt chart.**
+* Optimizations: border styles for state, constraints, what-if mode, KPIs.
+
+### 6.11 Traceability Tables
+
+* Material → Molding → Inspection → Assembly → Delivery.
+* **Master-detail tables + Sankey lineage.**
+* Optimizations: QR search, batch health score, certificates, quarantine badges.
+
+### 6.12 Multi-Machine Management
+
+* Hierarchical view for 30–120 machines.
+* **Tree + tile grid + rollups.**
+* Optimizations: rollup KPIs, cross-site filters, mobile KPIs.
+
+---
+
+## 7. Material Consumption & Forecasting
+
+### 7.1 Per-Cycle Data
+
+* Capture cycle time (seconds).
+* Capture plastic weight per shot (grams).
+
+### 7.2 Factory Stock
+
+* Manual entry of total stock (kg).
+* KPI card on dashboard showing current stock.
+
+### 7.3 Forecasting
+
+* Compute usage/minute = cycle × grams.
+* Deduct from stock; forecast depletion date/time.
+* Safety stock alerts.
+* What-if toggles: faster cycle, scrap %, job mix.
+
+---
+
+## 8. Additional Management Features
+
+1. **Energy Monitoring:** Track kWh per cycle, cost, CO₂ footprint.
+2. **Tooling Life Tracking:** Mold open/close counts, predict maintenance.
+3. **Operator Performance:** Setup times, alarm response, yield per shift.
+4. **Recipe Management:** Compare & validate condition sets.
+5. **Scrap/Regrind Tracking:** Scrap % and regrind reuse; link to material forecast.
+6. **Maintenance Knowledge Base:** Link alarms to SOPs + past resolutions.
+7. **AI Demand Forecast:** From ERP orders, predict machine loading & raw material.
+8. **Carbon Footprint Reporting:** Energy + material waste rolled up to sustainability KPIs.
+9. **Batch Certification:** Auto-generate certificates for lot traceability + quality.
+10. **Mobile Operator Alerts:** Lightweight app to acknowledge alarms & view KPIs.
+
+---
+
+## 9. Implementation Notes
+
+* Use consistent empty states, loading skeletons, error toasts.
+* “Help & SOP” link on each page → contextual docs.
+* Global time picker + persistent user preferences.

@@ -1,1 +1,1 @@
-export { default as MachineView } from './machine-view';
+export { default as MachineView } from './mission-control-view';
