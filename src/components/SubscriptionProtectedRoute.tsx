@@ -1,34 +1,97 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+
 import {
-  Box,
-  Container,
-  Typography,
   Card,
   CardContent,
-  Button,
-  Alert,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  CircularProgress,
-} from '@mui/material';
+  CardHeader,
+  CardTitle,
+} from 'src/components/ui/card';
+import { Button } from 'src/components/ui/button';
+import { Alert, AlertDescription } from 'src/components/ui/alert';
+import { Skeleton } from 'src/components/ui/skeleton';
 import {
-  CheckCircle as CheckIcon,
-  CreditCard as CreditCardIcon,
-  Lock as LockIcon,
-  Refresh as RefreshIcon,
-} from '@mui/icons-material';
+  Lock,
+  CreditCard,
+  RefreshCw,
+  Check,
+  Loader2,
+} from 'lucide-react';
+
 import { useAuth } from '../contexts/AuthContext';
-import { useSubscription } from '../hooks/useSubscription';
+import { subscriptionApi } from '../api/subscriptionServices';
+import type { SubscriptionResponse, SubscriptionPlan } from '../types';
 
-const SubscriptionRequiredPage = () => {
-  const { user, refreshUserData } = useAuth();
-  const { refreshSubscription } = useSubscription();
+const LoadingScreen: React.FC = () => {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen p-8">
+      <div className="w-full max-w-md space-y-6">
+        {/* Loading icon */}
+        <div className="flex justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+        
+        {/* Loading text */}
+        <div className="text-center space-y-2">
+          <h2 className="text-xl font-semibold">檢查訂閱狀態</h2>
+          <p className="text-muted-foreground">正在載入您的帳戶資訊...</p>
+        </div>
+        
+        {/* Loading skeleton */}
+        <Card className="w-full">
+          <CardHeader>
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-4 w-4/6" />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+const SubscriptionRequiredPage: React.FC = () => {
+  const { user } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
 
-  const features = [
+  // Fetch plans on mount
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const fetchedPlans = await subscriptionApi.getPlans();
+        setPlans(fetchedPlans);
+      } catch (error) {
+        console.error('Failed to fetch plans:', error);
+        // Set default plans as fallback
+        setPlans([{
+          id: 'professional_monthly',
+          name: '專業方案',
+          price: 500,
+          currency: 'TWD',
+          interval: 'month',
+          features: [],
+          stripePlanId: 'professional_monthly'
+        }]);
+      } finally {
+        setPlansLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  const formatPrice = (price: number, currency: string): string => {
+    const displayPrice = currency.toUpperCase() === 'TWD' ? price : price / 100;
+    return currency.toUpperCase() === 'TWD' ? `NT$ ${displayPrice}` : `$${displayPrice}`;
+  };
+
+  const getDefaultFeatures = () => [
     '無限制工廠管理',
     '實時機器監控',
     '數據分析報告', 
@@ -37,11 +100,15 @@ const SubscriptionRequiredPage = () => {
     '數據導出功能',
   ];
 
-  const handleRefreshSubscription = async () => {
+  // Get the primary plan (first one or professional if available)
+  const primaryPlan = plans.find(plan => plan.id.includes('professional')) || plans[0];
+  const features = primaryPlan?.description ? [primaryPlan.description] : getDefaultFeatures();
+
+  const handleRefreshSubscription = async (): Promise<void> => {
     setIsRefreshing(true);
     try {
-      await refreshSubscription();
-      await refreshUserData();
+      // Trigger a page reload to re-check subscription
+      window.location.reload();
     } catch (error) {
       console.error('Failed to refresh subscription:', error);
     } finally {
@@ -50,92 +117,100 @@ const SubscriptionRequiredPage = () => {
   };
 
   return (
-    <Container maxWidth="md" sx={{ py: 8 }}>
-      <Box textAlign="center" mb={4}>
-        <LockIcon sx={{ fontSize: 80, color: 'primary.main', mb: 2 }} />
-        <Typography variant="h3" component="h1" gutterBottom>
-          需要訂閱
-        </Typography>
-        <Typography variant="h6" color="text.secondary" gutterBottom>
+    <div className="container max-w-2xl mx-auto py-16 px-4">
+      <div className="text-center mb-8">
+        <Lock className="mx-auto h-20 w-20 text-primary mb-4" />
+        <h1 className="text-4xl font-bold mb-4">需要訂閱</h1>
+        <p className="text-xl text-muted-foreground">
           訪問 OPC UA 儀表板需要有效的訂閱
-        </Typography>
-      </Box>
+        </p>
+      </div>
 
-      <Alert severity="info" sx={{ mb: 4 }}>
-        <Typography variant="body1">
+      <Alert className="mb-6">
+        <AlertDescription>
           您好 {user?.username}！要繼續使用我們的工業監控平台，請升級到付費訂閱。
-        </Typography>
+        </AlertDescription>
       </Alert>
 
-      <Card sx={{ mb: 4 }}>
+      <Card className="mb-6">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">{primaryPlan?.name || '訂閱方案'}</CardTitle>
+        </CardHeader>
         <CardContent>
-          <Typography variant="h5" gutterBottom textAlign="center">
-            月度訂閱方案
-          </Typography>
-          
-          <Box display="flex" justifyContent="center" alignItems="baseline" mb={3}>
-            <Typography variant="h3" component="span" color="primary">
-              $29.99
-            </Typography>
-            <Typography variant="h6" color="text.secondary" ml={1}>
-              /月
-            </Typography>
-          </Box>
+          {plansLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin" />
+              <span className="ml-2">載入方案資訊...</span>
+            </div>
+          ) : (
+            <>
+              <div className="text-center mb-6">
+                <span className="text-4xl font-bold text-primary">
+                  {primaryPlan ? formatPrice(primaryPlan.price, primaryPlan.currency) : 'NT$ 500'}
+                </span>
+                <span className="text-muted-foreground ml-2">
+                  /{primaryPlan?.interval === 'month' ? '月' : '年'}
+                </span>
+              </div>
 
-          <Typography variant="h6" gutterBottom>
-            包含功能：
-          </Typography>
-          
-          <List>
-            {features.map((feature, index) => (
-              <ListItem key={index}>
-                <ListItemIcon>
-                  <CheckIcon color="primary" />
-                </ListItemIcon>
-                <ListItemText primary={feature} />
-              </ListItem>
-            ))}
-          </List>
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3">包含功能：</h3>
+                <ul className="space-y-2">
+                  {features.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-2">
+                      <Check className="h-5 w-5 text-primary" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
 
-          <Box textAlign="center" mt={4}>
+          <div className="text-center">
             <Button
-              variant="contained"
-              size="large"
-              startIcon={<CreditCardIcon />}
+              size="lg"
               onClick={() => window.location.href = '/settings'}
-              sx={{ px: 4, py: 1.5 }}
+              className="px-8 py-3"
             >
+              <CreditCard className="h-5 w-5 mr-2" />
               立即訂閱
             </Button>
-          </Box>
+          </div>
 
-          <Typography variant="body2" color="text.secondary" textAlign="center" mt={2}>
+          <p className="text-sm text-muted-foreground text-center mt-4">
             隨時可以取消 • 安全支付 • 即時啟用
-          </Typography>
+          </p>
         </CardContent>
       </Card>
 
-      <Box textAlign="center">
-        <Typography variant="body2" color="text.secondary" mb={2}>
+      <div className="text-center space-y-4">
+        <p className="text-muted-foreground">
           已經有訂閱了？請檢查您的訂閱狀態在{' '}
-          <Button variant="text" onClick={() => window.location.href = '/settings'}>
+          <Button 
+            variant="link" 
+            className="p-0 h-auto"
+            onClick={() => window.location.href = '/settings'}
+          >
             設定頁面
           </Button>
-        </Typography>
+        </p>
         
-        <Box display="flex" justifyContent="center" alignItems="center" gap={2}>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={isRefreshing ? <CircularProgress size={16} /> : <RefreshIcon />}
-            onClick={handleRefreshSubscription}
-            disabled={isRefreshing}
-          >
-            {isRefreshing ? '檢查中...' : '重新檢查訂閱狀態'}
-          </Button>
-        </Box>
-      </Box>
-    </Container>
+        <Button
+          variant="outline"
+          onClick={handleRefreshSubscription}
+          disabled={isRefreshing}
+          className="flex items-center gap-2"
+        >
+          {isRefreshing ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4" />
+          )}
+          {isRefreshing ? '檢查中...' : '重新檢查訂閱狀態'}
+        </Button>
+      </div>
+    </div>
   );
 };
 
@@ -144,21 +219,59 @@ interface SubscriptionProtectedRouteProps {
 }
 
 const SubscriptionProtectedRoute: React.FC<SubscriptionProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, hasActiveSubscription, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+  const [subscriptionData, setSubscriptionData] = useState<SubscriptionResponse | null>(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+
+  // Check subscription when component mounts and user is authenticated
+  useEffect(() => {
+    const checkSubscription = async (): Promise<void> => {
+      if (!isAuthenticated || loading) return;
+
+      setSubscriptionLoading(true);
+
+      try {
+        console.log('Checking subscription status...');
+        const subscription = await subscriptionApi.getCurrentSubscription();
+        console.log('Subscription data received:', subscription);
+        setSubscriptionData(subscription);
+      } catch (error) {
+        console.error('Failed to fetch subscription:', error);
+        // Set no subscription data on error (assume no active subscription)
+        setSubscriptionData(null);
+      } finally {
+        setSubscriptionLoading(false);
+      }
+    };
+
+    checkSubscription();
+  }, [isAuthenticated, loading]);
 
   // Show loading while checking auth status
   if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-        <Typography>載入中...</Typography>
-      </Box>
-    );
+    return <LoadingScreen />;
   }
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
+  // Show loading while checking subscription
+  if (subscriptionLoading) {
+    return <LoadingScreen />;
+  }
+
+  // Check if user has active subscription
+  const hasActiveSubscription = Boolean(
+    subscriptionData?.status && ['active', 'trialing'].includes(subscriptionData.status)
+  );
+
+  console.log('Subscription check result:', {
+    subscriptionData,
+    hasActiveSubscription,
+    status: subscriptionData?.status
+  });
 
   // Show subscription required page if no active subscription
   if (!hasActiveSubscription) {

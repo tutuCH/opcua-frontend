@@ -1,5 +1,6 @@
 // src/contexts/AuthContext.tsx
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TokenManager } from '../utils/tokenSecurity';
 import { userLogin, userSignup } from '../api/authServices';
 import { subscriptionApi } from '../api/subscriptionServices';
@@ -20,6 +21,7 @@ export const useAuth = (): AuthContextType => {
 };
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
   const [tokenWarning, setTokenWarning] = useState<number | null>(null);
@@ -28,39 +30,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // Check authentication status on mount with proper token validation
     const checkAuth = async (): Promise<void> => {
-      if (TokenManager.isAuthenticated()) {
-        setIsAuthenticated(true);
-        const currentUser = TokenManager.getCurrentUser();
-        
-        try {
-          // Fetch latest subscription data
-          const subscription = await subscriptionApi.getCurrentSubscription();
-          const userWithSubscription: User = {
-            ...currentUser,
-            subscriptionStatus: subscription?.status as User['subscriptionStatus'],
-            subscriptionId: subscription?.id,
-            planType: subscription?.plan.interval === 'month' ? 'monthly' : 'yearly',
-            subscriptionEndDate: subscription && subscription.currentPeriodEnd 
-              ? new Date(subscription.currentPeriodEnd * 1000).toISOString() 
-              : undefined,
-          };
-          setUser(userWithSubscription);
-        } catch (error) {
-          console.warn('Failed to fetch subscription data (backend may not be running):', error);
-          // Set user without subscription data if API is not available
-          const userWithoutSubscription: User = {
-            ...currentUser,
-            subscriptionStatus: 'inactive',
-            subscriptionId: undefined,
-            planType: undefined,
-            subscriptionEndDate: undefined,
-          };
-          setUser(userWithoutSubscription);
+      try {
+        if (TokenManager.isAuthenticated()) {
+          setIsAuthenticated(true);
+          const currentUser = TokenManager.getCurrentUser();
+          
+          try {
+            // Fetch latest subscription data
+            const subscription = await subscriptionApi.getCurrentSubscription();
+            const userWithSubscription: User = {
+              ...currentUser,
+              subscriptionStatus: subscription?.status as User['subscriptionStatus'],
+              subscriptionId: subscription?.id,
+              planType: subscription?.plan.interval === 'month' ? 'monthly' : 'yearly',
+              subscriptionEndDate: subscription && subscription.currentPeriodEnd 
+                ? new Date(subscription.currentPeriodEnd * 1000).toISOString() 
+                : undefined,
+            };
+            setUser(userWithSubscription);
+          } catch (error) {
+            console.warn('Failed to fetch subscription data (backend may not be running):', error);
+            // Set user without subscription data if API is not available
+            const userWithoutSubscription: User = {
+              ...currentUser,
+              subscriptionStatus: 'inactive',
+              subscriptionId: undefined,
+              planType: undefined,
+              subscriptionEndDate: undefined,
+            };
+            setUser(userWithoutSubscription);
+          }
+        } else {
+          setIsAuthenticated(false);
+          setUser(null);
+          TokenManager.clearAuthData();
         }
-      } else {
-        setIsAuthenticated(false);
-        setUser(null);
-        TokenManager.clearAuthData();
+      } finally {
+        // Always set loading to false after auth/subscription check completes
+        setLoading(false);
       }
     };
 
@@ -71,8 +78,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       (minutes: number) => setTokenWarning(minutes),
       5
     );
-    
-    setLoading(false);
 
     return cleanup;
   }, []);
@@ -86,6 +91,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsAuthenticated(true);
       setUser({ id: userId, email, username });
       setTokenWarning(null);
+      
+      // Navigate to factory page after successful login
+      navigate('/factory', { replace: true });
       
       return token;
     } catch (error) {
@@ -103,6 +111,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsAuthenticated(false);
     setUser(null);
     setTokenWarning(null);
+    
+    // Navigate to login page after logout
+    navigate('/login', { replace: true });
   };
 
   const refreshUserData = async (): Promise<void> => {

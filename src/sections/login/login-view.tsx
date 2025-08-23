@@ -15,7 +15,7 @@ import { useTheme } from '@mui/material/styles';
 import { bgGradient } from 'src/theme/css';
 
 import { useRouter } from 'src/routes/hooks';
-import { userLogin } from 'src/api/authServices';
+import { useAuth } from 'src/contexts/AuthContext';
 import { useFormValidation, validateEmail, validateRequired } from 'src/utils/validation';
 
 import Logo from 'src/components/logo';
@@ -25,6 +25,7 @@ import type { InputChangeEvent, ButtonClickEvent } from 'src/types';
 export default function LoginView() {
   const router = useRouter();
   const theme = useTheme();
+  const { login } = useAuth();
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
@@ -34,11 +35,10 @@ export default function LoginView() {
   const handleClick = async (): Promise<void> => {
     setLoading(true);
     try {
-      const token = await userLogin(email, password);
+      const token = await login(email, password);
       if (token) {
-        // Redirect to the dashboard or home page after successful login
-        // router.push('/dashboard');
-        router.push('/');
+        // Navigation is handled by the AuthContext login function
+        console.log('Login successful, redirecting to factory page');
       } else {
         alert('Login failed. Please check your credentials.');
       }

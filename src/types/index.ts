@@ -62,11 +62,13 @@ export interface ResetPasswordResponse {
 // Machine and Factory Types
 export interface Machine {
   id: string;
+  machineId: string;
   machineIpAddress: string;
   machineName: string;
   machineIndex: number;
   factoryId: string;
   factoryIndex: number;
+  warningCriteria?: WarningCriteria;
 }
 
 export interface CreateMachineRequest {
@@ -85,11 +87,16 @@ export interface UpdateMachineRequest {
 
 export interface Factory {
   id: string;
+  factoryId?: string;
   factoryName: string;
   factoryIndex: number;
   width: number;
   height: number;
+  factoryWidth?: number; // Legacy support
+  factoryHeight?: number; // Legacy support
+  userId?: string;
   machines?: Machine[];
+  warningCriteria?: WarningCriteria;
 }
 
 export interface CreateFactoryRequest {
@@ -97,6 +104,8 @@ export interface CreateFactoryRequest {
   factoryIndex: number;
   width: number;
   height: number;
+  userId?: string;
+  warningCriteria?: WarningCriteria;
 }
 
 export interface UpdateFactoryRequest {
@@ -105,6 +114,21 @@ export interface UpdateFactoryRequest {
   factoryIndex: number;
   width: number;
   height: number;
+  userId?: string;
+  warningCriteria?: WarningCriteria;
+}
+
+export interface CreateFactoryResponse {
+  factoryId: string;
+  message?: string;
+}
+
+export interface UpdateFactoryResponse {
+  factoryId: string;
+  factoryName: string;
+  width: number;
+  height: number;
+  message?: string;
 }
 
 export interface FactoriesMachinesResponse {

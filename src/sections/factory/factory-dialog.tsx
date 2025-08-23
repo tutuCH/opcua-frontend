@@ -7,7 +7,9 @@ import type {
   CriteriaConfig, 
   InputChangeEvent, 
   FormSubmitEvent, 
-  ButtonClickEvent 
+  ButtonClickEvent,
+  CreateFactoryResponse,
+  UpdateFactoryResponse 
 } from 'src/types';
 
 import {
@@ -97,8 +99,8 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
     if (isEditMode && factories[factoryIndex]) {
       const factory = factories[factoryIndex];
       setFactoryName(factory.factoryName);
-      setWidth(factory.factoryWidth);
-      setHeight(factory.factoryHeight);
+      setWidth((factory.factoryWidth || factory.width || 0).toString());
+      setHeight((factory.factoryHeight || factory.height || 0).toString());
       
       // Load factory warning criteria if they exist
       if (factory.warningCriteria) {
@@ -109,10 +111,11 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
       const machineSettings: Record<string, WarningCriteria> = {};
       if (factory.machines && factory.machines.length > 0) {
         factory.machines.forEach(machine => {
+          const machineId = machine.machineId || machine.id;
           if (machine.warningCriteria) {
-            machineSettings[machine.machineId] = machine.warningCriteria;
+            machineSettings[machineId] = machine.warningCriteria;
           } else {
-            machineSettings[machine.machineId] = { ...DEFAULT_CRITERIA };
+            machineSettings[machineId] = { ...DEFAULT_CRITERIA };
           }
         });
       }
@@ -120,7 +123,8 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
       
       // Set the first machine as selected if available
       if (factory.machines && factory.machines.length > 0) {
-        setSelectedMachine(factory.machines[0].machineId.toString());
+        const firstMachineId = factory.machines[0].machineId || factory.machines[0].id;
+        setSelectedMachine(firstMachineId.toString());
       } else {
         setSelectedMachine('factory');
       }
@@ -157,16 +161,19 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
       width: parseInt(width, 10), 
       height: parseInt(height, 10),
       warningCriteria: factoryCriteria
-    });
+    }) as CreateFactoryResponse;
     
     const factoryId = createNewFactoryRes.factoryId;
     const machines = [];
-    const newFactory = {
+    const newFactory: FactoryType = {
+      id: factoryId,
+      factoryId,
       factoryName,
       userId,
-      factoryId,
       factoryIndex: factories.length,
       machines,
+      width: parseInt(width, 10),
+      height: parseInt(height, 10),
       factoryWidth: parseInt(width, 10),
       factoryHeight: parseInt(height, 10),
       warningCriteria: factoryCriteria
@@ -182,7 +189,7 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
     handleClose();
   };
 
-  const insertFactoryToState = (factoryIndex, factory) => {
+  const insertFactoryToState = (factoryIndex: number, factory: FactoryType): void => {
     setFactories((prevFactories) => [...prevFactories, factory]);
     setMachineDialogState((prevMachineDialogState) => [...prevMachineDialogState, false]);
   };
@@ -190,18 +197,18 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
   const handleUpdateFactory = async (event: FormSubmitEvent): Promise<void> => {
     event.preventDefault();
     
-    const factoryId = factories[factoryIndex].factoryId;
+    const factoryId = factories[factoryIndex].factoryId || factories[factoryIndex].id;
     
     // Check if factory size is sufficient for existing machines
-    if (isEditMode && factories[factoryIndex].machines.length > 0) {
+    if (isEditMode && factories[factoryIndex].machines && factories[factoryIndex].machines.length > 0) {
       const lastMachineIndex = Math.max(
         ...factories[factoryIndex].machines.map(machine => machine.machineIndex)
       );
       
       if (lastMachineIndex >= parseInt(width, 10) * parseInt(height, 10)) {
-      alert('工廠大小不足以容納所有機台');
-      return;
-    }
+        alert('工廠大小不足以容納所有機台');
+        return;
+      }
     }
     
     const updateNewFactoryRes = await updateFactory({ 
@@ -212,7 +219,7 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
       height: parseInt(height, 10), 
       factoryId,
       warningCriteria: factoryCriteria
-    });
+    }) as UpdateFactoryResponse;
     
     updateFactoryInState(updateNewFactoryRes);
     setFactoryName('');
@@ -222,14 +229,16 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
     handleClose();
   };
 
-  const updateFactoryInState = (updatedFactoryData) => {
+  const updateFactoryInState = (updatedFactoryData: UpdateFactoryResponse): void => {
     setFactories((prevFactories) => {
       const updatedFactories = prevFactories.map((factory) => {
-        if (factory.factoryId === updatedFactoryData.factoryId) {
+        if ((factory.factoryId || factory.id) === updatedFactoryData.factoryId) {
           // Update factory info
-          const updatedFactoryObj = {
-              ...factory,
+          const updatedFactoryObj: FactoryType = {
+            ...factory,
             factoryName: updatedFactoryData.factoryName,
+            width: updatedFactoryData.width,
+            height: updatedFactoryData.height,
             factoryWidth: updatedFactoryData.width,
             factoryHeight: updatedFactoryData.height,
             warningCriteria: factoryCriteria
@@ -239,7 +248,7 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
           if (updatedFactoryObj.machines && updatedFactoryObj.machines.length > 0) {
             updatedFactoryObj.machines = updatedFactoryObj.machines.map(machine => ({
               ...machine,
-              warningCriteria: machineCriteria[machine.machineId] || { ...DEFAULT_CRITERIA }
+              warningCriteria: machineCriteria[machine.machineId || machine.id] || { ...DEFAULT_CRITERIA }
             }));
           }
           
@@ -252,7 +261,7 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
     });
   };
 
-  const handleCriteriaChange = useCallback((metric, field, value) => {
+  const handleCriteriaChange = useCallback((metric: keyof WarningCriteria, field: keyof CriteriaConfig, value: boolean | string | number): void => {
     if (selectedMachine === 'factory') {
       // Update factory criteria
       setFactoryCriteria(prev => ({
@@ -275,7 +284,7 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
         }
       }));
     }
-  }, [selectedMachine, factoryCriteria, machineCriteria, setFactoryCriteria, setMachineCriteria]);
+  }, [selectedMachine]);
 
   const getCurrentCriteria = useMemo(() => {
     if (selectedMachine === 'factory') {
@@ -284,13 +293,13 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
     return machineCriteria[selectedMachine] || { ...DEFAULT_CRITERIA };
   }, [selectedMachine, factoryCriteria, machineCriteria]);
 
-  const handleCopySettings = useCallback(() => {
+  const handleCopySettings = useCallback((): void => {
     const currentSettings = getCurrentCriteria;
     setCopiedSettings(JSON.parse(JSON.stringify(currentSettings)));
     setCopySuccess(true);
   }, [getCurrentCriteria]);
 
-  const handlePasteSettings = () => {
+  const handlePasteSettings = (): void => {
     if (!copiedSettings) return;
     
     if (selectedMachine === 'factory') {
@@ -304,13 +313,13 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
     setPasteSuccess(true);
   };
 
-  const handleApplyToAll = () => {
+  const handleApplyToAll = (): void => {
     const currentSettings = getCurrentCriteria;
     const settings = JSON.parse(JSON.stringify(currentSettings));
     
     // Get all machine IDs
     const machineIds = isEditMode && factories[factoryIndex]?.machines 
-      ? factories[factoryIndex].machines.map(m => m.machineId.toString())
+      ? factories[factoryIndex].machines.map(m => (m.machineId || m.id).toString())
       : [];
     
     // Apply settings to all machines
@@ -329,8 +338,8 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Factory className="h-5 w-5 text-slate-600" />
-          {isEditMode ? "編輯工廠" : "新增工廠"}
-        </DialogTitle>
+            {isEditMode ? "編輯工廠" : "新增工廠"}
+          </DialogTitle>
           <DialogDescription>
             {isEditMode 
               ? "編輯工廠資訊和設定警告條件" 
@@ -350,9 +359,9 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
                 <div className="space-y-2">
                   <Label htmlFor="factoryName">工廠名稱</Label>
                   <Input
-            id="factoryName"
-            value={factoryName}
-            onChange={(e: InputChangeEvent) => setFactoryName(e.target.value)}
+                    id="factoryName"
+                    value={factoryName}
+                    onChange={(e: InputChangeEvent) => setFactoryName(e.target.value)}
                     placeholder="輸入工廠名稱"
                     required
                   />
@@ -362,11 +371,11 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
                   <div className="space-y-2">
                     <Label htmlFor="factoryWidth">寬</Label>
                     <Input
-              id="factoryWidth"
+                      id="factoryWidth"
                       type="number"
                       min="1"
-              value={width}
-              onChange={(e: InputChangeEvent) => setWidth(e.target.value)}
+                      value={width}
+                      onChange={(e: InputChangeEvent) => setWidth(e.target.value)}
                       placeholder="工廠寬度"
                       required
                     />
@@ -374,11 +383,11 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
                   <div className="space-y-2">
                     <Label htmlFor="factoryHeight">長</Label>
                     <Input
-              id="factoryHeight"
+                      id="factoryHeight"
                       type="number"
                       min="1"
-              value={height}
-              onChange={(e: InputChangeEvent) => setHeight(e.target.value)}
+                      value={height}
+                      onChange={(e: InputChangeEvent) => setHeight(e.target.value)}
                       placeholder="工廠長度"
                       required
                     />
@@ -402,11 +411,14 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="factory">工廠預設設定</SelectItem>
-                      {factories[factoryIndex]?.machines?.map(machine => (
-                        <SelectItem key={machine.machineId} value={machine.machineId.toString()}>
-                          {machine.machineName}
-                        </SelectItem>
-                      ))}
+                      {factories[factoryIndex]?.machines?.map(machine => {
+                        const machineId = machine.machineId || machine.id;
+                        return (
+                          <SelectItem key={machineId} value={machineId.toString()}>
+                            {machine.machineName}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -452,7 +464,7 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
                   <Badge variant="outline" className="text-xs">
                     {selectedMachine === 'factory' 
                       ? '工廠預設設定將應用於所有未配置的新機台' 
-                      : `正在配置: ${factories[factoryIndex]?.machines?.find(m => m.machineId.toString() === selectedMachine)?.machineName}`}
+                      : `正在配置: ${factories[factoryIndex]?.machines?.find(m => (m.machineId || m.id).toString() === selectedMachine)?.machineName}`}
                   </Badge>
                 </div>
               </div>
@@ -644,7 +656,7 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
                               </Select>
                               
                               <Input
-              type="number"
+                                type="number"
                                 value={getCurrentCriteria.meltTemperature?.value || 200}
                                 onChange={(e) => handleCriteriaChange('meltTemperature', 'value', parseFloat(e.target.value))}
                                 min="0"
@@ -674,6 +686,5 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
       </Dialog>
   );
 };
-
 
 export default React.memo(FactoryDialog);

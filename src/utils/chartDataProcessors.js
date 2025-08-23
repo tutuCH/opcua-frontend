@@ -527,8 +527,7 @@ export const calculateControlLimits = (data, parameter) => {
 };
 
 // Calculate moving average
-export const calculateMovingAverage = (data, parameter, windowSize = 5) => {
-  return data.map((entry, index) => {
+export const calculateMovingAverage = (data, parameter, windowSize = 5) => data.map((entry, index) => {
     const start = Math.max(0, index - windowSize + 1);
     const window = data.slice(start, index + 1);
     const average = window.reduce((sum, item) => sum + (item[parameter] || 0), 0) / window.length;
@@ -538,4 +537,3 @@ export const calculateMovingAverage = (data, parameter, windowSize = 5) => {
       movingAverage: parseFloat(average.toFixed(2))
     };
   });
-};
