@@ -14,7 +14,7 @@ const AuthCallback = () => {
         try {
           console.log('code', code);
           // Call your backend endpoint to exchange the code for tokens
-          const response = await fetch('http://localhost:3000/auth/callback' + location.search, {
+          const response = await fetch(`http://localhost:3000/auth/callback${  location.search}`, {
             method: 'GET',
             credentials: 'include', // include cookies if using session
           });

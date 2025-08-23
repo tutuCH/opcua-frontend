@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import LoadingSkeleton from '@/components/loadingSkeleton/loadingSkeleton';
 import { getFactoriesMachinesByUserId } from 'src/api/machinesServices';
+import LoadingSkeleton from '@/components/loadingSkeleton/loadingSkeleton';
 import MachineBreadcumbList from './components/machine-breadcumb-list';
 import MachineTableChartTab from './components/machine-table-chart-tab';
+
 export default function Machine() {
   const [isLoading, setIsLoading] = useState(false);
   const [factories, setFactories] = useState([]);
@@ -34,15 +35,13 @@ export default function Machine() {
     if (machineId) {
       setSelectedMachine(factories.flatMap(factory => factory.machines).find(m => m.machineId === parseInt(machineId, 10)));
       setBelongsToFactory(factories.find(factory => factory.machines.some(machine => machine.machineId === parseInt(machineId, 10))));
-    } else {
-      if (factories.length > 0 && factories[0].machines && factories[0].machines.length > 0) {
+    } else if (factories.length > 0 && factories[0].machines && factories[0].machines.length > 0) {
         setSelectedMachine(factories[0].machines[0]);
         setBelongsToFactory(factories[0]);
       } else {
         setSelectedMachine(null);
         setBelongsToFactory(null);
       }
-    }
   }
 
   return (

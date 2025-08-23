@@ -4,7 +4,6 @@ import * as React from "react"
 import { addDays, format, subDays } from "date-fns"
 import { CalendarIcon } from "lucide-react"
 
-import { cn } from "@/lib/utils"
 import { Button } from "src/components/ui/button"
 import { Calendar } from "src/components/ui/calendar"
 import {
@@ -19,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "src/components/ui/select"
+import { cn } from "@/lib/utils"
 
 export default function AdvancedDatePicker({ className, onRangeChange }) {
   const [date, setDate] = React.useState({
@@ -62,7 +62,7 @@ export default function AdvancedDatePicker({ className, onRangeChange }) {
         <PopoverTrigger asChild>
           <Button
             id="date"
-            variant={"outline"}
+            variant="outline"
             className={cn(
               "w-[300px] justify-start text-left font-normal",
               !date && "text-muted-foreground"

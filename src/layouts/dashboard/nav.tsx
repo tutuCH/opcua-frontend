@@ -100,7 +100,7 @@ Nav.propTypes = {
   onCloseNav: PropTypes.func,
 };
 
-const NavItem = React.memo(function NavItem({ item }) {
+const NavItem = React.memo(({ item }) => {
   const pathname = usePathname();
   const active = pathname.includes(item.path);
 

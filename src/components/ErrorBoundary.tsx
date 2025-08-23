@@ -15,8 +15,8 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     this.setState({
-      error: error,
-      errorInfo: errorInfo
+      error,
+      errorInfo
     });
     
     // Log error to console in development
@@ -99,23 +99,19 @@ class ErrorBoundary extends React.Component {
 }
 
 // Higher-order component for easier usage
-export const withErrorBoundary = (Component, errorBoundaryProps = {}) => {
-  return function WrappedComponent(props) {
+export const withErrorBoundary = (Component, errorBoundaryProps = {}) => function WrappedComponent(props) {
     return (
       <ErrorBoundary {...errorBoundaryProps}>
         <Component {...props} />
       </ErrorBoundary>
     );
   };
-};
 
 // Hook for programmatic error handling
-export const useErrorHandler = () => {
-  return (error, errorInfo) => {
+export const useErrorHandler = () => (error, errorInfo) => {
     // This could trigger an error boundary by throwing
     throw error;
   };
-};
 
 // Specialized error boundaries for different contexts
 export const ChartErrorBoundary = ({ children, onError }) => {

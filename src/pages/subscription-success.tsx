@@ -50,7 +50,7 @@ export default function SubscriptionSuccess() {
         
         // Retry up to 3 times with exponential backoff
         if (retryCount < 3) {
-          const delay = 2000 * Math.pow(2, retryCount); // 2s, 4s, 8s
+          const delay = 2000 * 2**retryCount; // 2s, 4s, 8s
           setTimeout(() => {
             setRetryCount(prev => prev + 1);
           }, delay);
