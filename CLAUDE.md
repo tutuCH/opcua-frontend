@@ -24,7 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Technology Stack
 - **Frontend:** React 18 with Vite build system
-- **UI Framework:** Material-UI (MUI) v6 + shadcn/ui components + Tailwind CSS
+- **UI Framework:** Mixed architecture - MUI v6 + shadcn/ui components + Tailwind CSS
 - **Routing:** React Router v6 with lazy loading
 - **State Management:** React Context (AuthContext) + local component state
 - **HTTP Client:** Axios with interceptors
@@ -41,12 +41,16 @@ src/
 │   ├── factory/       # Factory management (CRUD, dialogs, machine positioning)
 │   ├── machine/       # Machine monitoring (charts, data tables)
 │   ├── warnings/      # Warning system (cards, date filtering)
-│   └── ...
+│   ├── settings/      # Settings management (personal info, subscription)
+│   └── login/         # Authentication components
 ├── components/        # Reusable UI components
+│   ├── ui/           # shadcn/ui components (modern Radix-based)
+│   └── ...           # Legacy and custom components
 ├── pages/            # Page components
 ├── routes/           # Routing configuration
 ├── theme/            # MUI theme customization
-└── utils/            # Utility functions
+├── utils/            # Utility functions
+└── lib/              # Shared utilities (cn function, etc.)
 ```
 
 ### Key Business Logic
@@ -55,10 +59,13 @@ src/
 - **OPC UA Integration:** Industrial protocol for connecting to manufacturing equipment
 - **Warning System:** Configurable alerts based on machine parameters (temperature, pressure, cycle time)
 
-### Authentication
-- JWT-based authentication with 30-day token expiration
-- Protected routes using AuthMiddleware wrapper
-- Automatic logout on 401 responses via Axios interceptor
+### Authentication & Authorization Architecture
+- **JWT-based authentication** with 30-day token expiration stored in localStorage
+- **AuthContext** provides centralized authentication state and navigation
+- **AuthMiddleware** component handles route-level authentication checks
+- **SubscriptionProtectedRoute** provides subscription-based access control
+- **Token Management** via TokenManager utility with automatic cleanup
+- **Navigation Integration**: AuthContext handles post-login/logout navigation automatically
 
 ### Subscription & Billing
 - **Stripe Checkout Integration**: Uses prebuilt Stripe Checkout pages for subscriptions
@@ -67,42 +74,78 @@ src/
 - **API Endpoints**: 
   - `POST /api/subscription/create-checkout-session` - Create Stripe Checkout session
   - `POST /api/subscription/create-portal-session` - Access customer portal
+  - `GET /api/subscription/current` - Get current subscription status
 - **Callback Pages**: Success (`/subscription/success`) and Cancel (`/subscription/cancel`) handling
 - **Lookup Keys**: Uses descriptive keys like `basic_monthly`, `professional_monthly`, `enterprise_monthly`
+- **Real-time Subscription Checking**: SubscriptionProtectedRoute makes direct API calls to verify subscription status
+
+### Route Protection & Navigation Flow
+```
+Login → AuthContext.login() → Auto-navigate to /factory
+Logout → AuthContext.logout() → Auto-navigate to /login
+Protected Routes → AuthMiddleware → SubscriptionProtectedRoute → Content
+```
+
+**Route Hierarchy:**
+1. **AuthMiddleware**: Handles authentication checks and redirects
+2. **DashboardLayout**: Provides common layout (nav, header)  
+3. **SubscriptionProtectedRoute**: Verifies active subscription before content access
+4. **Page Components**: Final rendered content
 
 ### API Integration
 - Base URL configured via `VITE_BACKEND_URL` environment variable
 - RESTful endpoints for factory/machine operations
 - OPC UA connection management endpoints
+- Subscription API endpoints for Stripe integration
+- **Axios interceptors** for automatic token attachment and 401 handling
 
 ### State Management Patterns
-- **Authentication:** React Context for global auth state
+- **Authentication:** React Context for global auth state with navigation integration
+- **Subscription Data:** Local state in SubscriptionProtectedRoute with dedicated API calls
 - **API Data:** Local component state with useEffect + useState
-- **Forms:** React Hook Form for complex forms
+- **Forms:** React Hook Form for complex forms (settings, login)
 - **No global state library** - intentionally simple architecture
 
-### UI Component Conventions
-- **Primary UI:** Material-UI components with custom theming
-- **Modern Components:** shadcn/ui + Radix for advanced interactions
-- **Styling:** Tailwind CSS for custom styling
-- **Consistent Icons:** Lucide React throughout the application
+### UI Component Migration Strategy
+The codebase is in **active migration** from MUI to shadcn/ui:
+
+**Current State:**
+- **New Components**: Use shadcn/ui + Tailwind CSS (settings pages, navigation, subscription components)
+- **Legacy Components**: Still use MUI v6 (factory management, machine monitoring, warnings)
+- **Mixed Usage**: Some components combine both approaches during transition
+
+**Component Conventions:**
+- **shadcn/ui**: Located in `src/components/ui/` - modern, accessible, Radix-based
+- **MUI**: Traditional Material-UI components with custom theming
+- **Icons**: Consistently use Lucide React across all components
+- **Styling**: Tailwind CSS classes preferred over MUI sx prop
+- **Loading States**: Use Loader2 from Lucide + shadcn Skeleton components
 
 ### Development Notes
 - **Language:** Mixed English/Chinese in UI (Chinese labels, English code)
 - **Build Tool:** Vite with React SWC plugin for fast builds
 - **Code Quality:** ESLint with Airbnb config + Prettier
-- **TypeScript:** Limited usage (mainly for shadcn/ui components)
+- **TypeScript:** Expanding usage, especially for new shadcn/ui components and API integrations
+- **Port Conflicts:** Development server automatically finds available ports (3030, 3031, 3032, etc.)
 
 ### Common Patterns
-- **Dialogs:** Material-UI dialogs for CRUD operations
-- **Tables:** Custom table components with sorting/filtering
-- **Charts:** ApexCharts for time-series data visualization
-- **Loading States:** Skeleton components and loading indicators
-- **Error Handling:** Try-catch blocks with user-friendly messages
+- **Authentication Flow**: Always use AuthContext methods, never direct navigation
+- **Subscription Checks**: SubscriptionProtectedRoute handles API calls and loading states
+- **Loading States**: Use shadcn Skeleton + Loader2 for consistent loading UX
+- **Form Validation**: React Hook Form with proper TypeScript typing
+- **Error Handling**: Try-catch blocks with user-friendly Alert components
+- **Navigation**: Use React Router's navigate with { replace: true } to prevent back button issues
+
+### Critical Implementation Details
+- **Subscription Loading**: SubscriptionProtectedRoute makes independent API call to prevent flash of subscription required page
+- **Token Refresh**: AuthContext includes token warning system (5 minutes before expiration)
+- **Route Throttling Prevention**: AuthMiddleware uses useRef to prevent duplicate navigation calls
+- **Loading State Coordination**: AuthContext loading state covers both auth and subscription checks
 
 ### Testing
 - No test framework currently configured
 - Manual testing approach
+- Test account: abc@gmail.com, password: abc123
 
 ### Environment Variables
 - `VITE_BACKEND_URL`: Backend API base URL (default: http://localhost:3000)
@@ -153,4 +196,24 @@ src/
 - `Data.OPM`: Current operational mode of the machine
 - `Data.STS`: Overall machine status indicator
 - `Data.T1-T7`: Temperature readings from 7 heating zones in injection molding barrel
-- testing account: abc@gmail.com, password: abc123
+
+## Migration Guidelines
+
+### When Adding New Components
+1. **Use shadcn/ui** for all new UI components
+2. **Apply Tailwind CSS** for styling instead of MUI sx
+3. **Use Lucide React icons** consistently
+4. **Implement proper TypeScript** interfaces
+5. **Follow AuthContext patterns** for authentication
+
+### When Refactoring Existing Components  
+1. **Prioritize user-facing components** (settings, login, subscription pages)
+2. **Maintain functional compatibility** during migration
+3. **Test navigation flows** thoroughly after auth-related changes
+4. **Use proper loading states** to prevent UI flash issues
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.

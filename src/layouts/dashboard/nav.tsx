@@ -1,23 +1,32 @@
 import React, { useEffect, useMemo } from "react";
-import PropTypes from "prop-types";
+import { cn } from "src/lib/utils";
 
-import Box from "@mui/material/Box";
-import Stack from "@mui/material/Stack";
-import Avatar from "@mui/material/Avatar";
-import { alpha } from "@mui/material/styles";
-import Typography from "@mui/material/Typography";
-import ListItemButton from "@mui/material/ListItemButton";
+import { Avatar, AvatarFallback, AvatarImage } from "src/components/ui/avatar";
+import { Button } from "src/components/ui/button";
+import { ScrollArea } from "src/components/ui/scroll-area";
 
 import { usePathname } from "src/routes/hooks";
 import { RouterLink } from "src/routes/components";
 import { useResponsive } from "src/hooks/use-responsive";
-import Scrollbar from "src/components/scrollbar";
 
 import { NAV } from "./config-layout";
 import navConfig from "./config-navigation";
 import { BottomNav } from "./bottom-nav";
 
-export default function Nav({ openNav, onCloseNav }) {
+interface NavProps {
+  openNav: boolean;
+  onCloseNav: () => void;
+}
+
+interface NavItemProps {
+  item: {
+    title: string;
+    path: string;
+    icon: React.ReactNode;
+  };
+}
+
+export default function Nav({ openNav, onCloseNav }: NavProps) {
   const pathname = usePathname();
   const upLg = useResponsive("up", "lg");
 
@@ -34,105 +43,73 @@ export default function Nav({ openNav, onCloseNav }) {
 
   const content = useMemo(
     () => (
-      <Scrollbar
-        sx={{
-          height: 1,
-          "& .simplebar-content": {
-            height: 1,
-            display: "flex",
-            flexDirection: "column",
-          },
-        }}
-      >
-        <Box
-          sx={{
-            my: 3,
-            mx: 2.5,
-            py: 2,
-            px: 2.5,
-            display: "flex",
-            alignItems: "center",
-            borderRadius: 1.5,
-            bgcolor: (theme) => alpha(theme.palette.grey[500], 0.12),
-          }}
-        >
-          <Avatar src={account.photoURL} alt="photoURL" />
-          <Box sx={{ ml: 2 }}>
-            <Typography variant="subtitle2">{account.displayName}</Typography>
-            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              {account.role}
-            </Typography>
-          </Box>
-        </Box>
-        <Stack component="nav" spacing={0.5} sx={{ px: 2 }}>
-          {navConfig.map((item) => (
-            <NavItem key={item.title} item={item} />
-          ))}
-        </Stack>
-        <Box sx={{ flexGrow: 1 }} />
-      </Scrollbar>
+      <ScrollArea className="h-full">
+        <div className="flex h-full flex-col">
+          <div className="my-3 mx-2.5 py-2 px-2.5 flex items-center rounded-xl bg-muted/50">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={account.photoURL} alt="Profile" />
+              <AvatarFallback className="bg-primary text-primary-foreground">
+                {account.displayName?.[0]?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="ml-3">
+              <p className="text-sm font-medium leading-none">
+                {account.displayName}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {account.email}
+              </p>
+            </div>
+          </div>
+          <nav className="px-2 space-y-1">
+            {navConfig.map((item) => (
+              <NavItem key={item.title} item={item} />
+            ))}
+          </nav>
+          <div className="flex-grow" />
+        </div>
+      </ScrollArea>
     ),
-    [account, pathname]
+    [account.displayName, account.email, account.photoURL]
   );
 
   return (
-    <Box sx={{ flexShrink: { lg: 0 }, width: { lg: NAV.WIDTH } }}>
+    <div className="lg:flex-shrink-0" style={{ width: upLg ? NAV.WIDTH : undefined }}>
       {upLg ? (
-        <Box
-          sx={{
-            height: 1,
-            position: "fixed",
-            width: NAV.WIDTH,
-            borderRight: (theme) => `dashed 1px ${theme.palette.divider}`,
-          }}
+        <div
+          className="h-screen fixed border-r border-dashed border-border"
+          style={{ width: NAV.WIDTH }}
         >
           {content}
-        </Box>
+        </div>
       ) : (
         <BottomNav />
       )}
-    </Box>
+    </div>
   );
 }
 
-Nav.propTypes = {
-  openNav: PropTypes.bool,
-  onCloseNav: PropTypes.func,
-};
 
-const NavItem = React.memo(({ item }) => {
+const NavItem = React.memo(({ item }: NavItemProps) => {
   const pathname = usePathname();
   const active = pathname.includes(item.path);
 
   return (
-    <ListItemButton
-      component={RouterLink}
-      href={item.path}
-      sx={{
-        minHeight: 44,
-        borderRadius: 0.75,
-        typography: "body2",
-        textTransform: "capitalize",
-        fontWeight: "fontWeightMedium",
-        color: "text.secondary",
-        ...(active && {
-          color: "primary.main",
-          fontWeight: "fontWeightSemiBold",
-          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-          "&:hover": {
-            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.16),
-          },
-        }),
-      }}
+    <Button
+      variant={active ? "secondary" : "ghost"}
+      className={cn(
+        "w-full justify-start h-11 px-3",
+        active && "bg-secondary text-secondary-foreground font-semibold"
+      )}
+      asChild
     >
-      <Box component="span" sx={{ width: 24, height: 24, mr: 2 }}>
-        {item.icon}
-      </Box>
-      <Box component="span">{item.title}</Box>
-    </ListItemButton>
+      <RouterLink href={item.path}>
+        <span className="mr-3 flex h-6 w-6 items-center justify-center">
+          {item.icon}
+        </span>
+        <span className="capitalize">{item.title}</span>
+      </RouterLink>
+    </Button>
   );
 });
 
-NavItem.propTypes = {
-  item: PropTypes.object.isRequired,
-};

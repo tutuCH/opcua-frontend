@@ -220,7 +220,7 @@ export default function MissionControlView() {
                 <p className="text-2xl font-bold text-green-600">{summaryStats.running}</p>
               </div>
               <div className="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center">
-                <div className="h-3 w-3 rounded-full bg-white"></div>
+                <div className="h-3 w-3 rounded-full bg-white" />
               </div>
             </div>
           </CardContent>

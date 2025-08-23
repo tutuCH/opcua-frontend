@@ -1,96 +1,82 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { cn } from 'src/lib/utils';
 import {
-  Box,
-  Typography,
   Card,
   CardContent,
-  Button,
-  Grid,
-  Chip,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  CircularProgress,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Divider,
-} from '@mui/material';
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from 'src/components/ui/card';
+import { Button } from 'src/components/ui/button';
+import { Badge } from 'src/components/ui/badge';
+import { Alert, AlertDescription } from 'src/components/ui/alert';
 import {
-  CheckCircle as CheckIcon,
-  Cancel as CancelIcon,
-  CreditCard as CreditCardIcon,
-  Warning as WarningIcon,
-} from '@mui/icons-material';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from 'src/components/ui/dialog';
+import {
+  Check,
+  X,
+  CreditCard,
+  AlertTriangle,
+  Loader2,
+} from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSubscription } from '../../hooks/useSubscription';
 import { subscriptionApi } from '../../api/subscriptionServices';
 import type { SubscriptionPlan } from '../../types';
 
-const mockPlans: SubscriptionPlan[] = [
-  {
-    id: 'Basic Plan',
-    name: '基礎方案',
-    price: 9.99,
-    currency: 'usd',
-    interval: 'month',
-    stripePlanId: 'prod_SsYMbLHMTpux8x', // This will be used as lookup_key
-    features: [
-      '1 個工廠管理',
-      '實時機器監控',
-      '數據分析報告',
-      '警報系統',
-    ],
-  },
-  {
-    id: 'Professional Plan',
-    name: '專業方案',
-    price: 29.99,
-    currency: 'usd',
-    interval: 'month',
-    stripePlanId: 'prod_SsYNJuQnqrekCW', // This will be used as lookup_key
-    features: [
-      '無限制工廠管理',
-      '實時機器監控',
-      '數據分析報告',
-      '警報系統',
-      '24/7 客戶支持',
-      '數據導出功能',
-    ],
-  },
-  {
-    id: 'enterprise_monthly',
-    name: '企業方案',
-    price: 99.99,
-    currency: 'usd',
-    interval: 'month',
-    stripePlanId: 'enterprise_monthly', // This will be used as lookup_key
-    features: [
-      '無限制工廠管理',
-      '實時機器監控',
-      '數據分析報告',
-      '警報系統',
-      '24/7 客戶支持',
-      '數據導出功能',
-      'AI 智能助手',
-      '專屬客戶經理',
-    ],
-  },
-];
 
-export default function SubscriptionSection() {
-  const { user, hasActiveSubscription } = useAuth();
+interface ActionMessage {
+  type: 'success' | 'error';
+  text: string;
+}
+
+
+const SubscriptionSection: React.FC = () => {
+  const { hasActiveSubscription } = useAuth();
   const { subscription, isLoading, error, cancelSubscription } = useSubscription();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [isCreatingCheckout, setIsCreatingCheckout] = useState(false);
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
-  const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [actionMessage, setActionMessage] = useState<ActionMessage | null>(null);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(false);
+  const [plansError, setPlansError] = useState<string | null>(null);
 
-  const handleSubscribeClick = async (plan: SubscriptionPlan) => {
+  // Fetch plans when component mounts
+  useEffect(() => {
+    const fetchPlans = async (): Promise<void> => {
+      setPlansLoading(true);
+      setPlansError(null);
+      try {
+        const fetchedPlans = await subscriptionApi.getPlans();
+        // Transform plans to include stripePlanId
+        const transformedPlans = fetchedPlans.map(plan => ({
+          ...plan,
+          stripePlanId: plan.id, // Use the plan id as the Stripe lookup key
+          features: plan.description ? [plan.description] : [], // Use description as feature
+        }));
+        setPlans(transformedPlans);
+      } catch (err) {
+        console.error('Failed to fetch plans:', err);
+        setPlansError('無法載入訂閱方案，請稍後再試');
+      } finally {
+        setPlansLoading(false);
+      }
+    };
+
+    if (!hasActiveSubscription) {
+      fetchPlans();
+    }
+  }, [hasActiveSubscription]);
+
+  const handleSubscribeClick = async (plan: SubscriptionPlan): Promise<void> => {
     setIsCreatingCheckout(true);
     setActionMessage(null);
 
@@ -125,7 +111,7 @@ export default function SubscriptionSection() {
     }
   };
 
-  const handleManageSubscription = async () => {
+  const handleManageSubscription = async (): Promise<void> => {
     setIsOpeningPortal(true);
     setActionMessage(null);
 
@@ -157,7 +143,7 @@ export default function SubscriptionSection() {
     }
   };
 
-  const handleCancelSubscription = async () => {
+  const handleCancelSubscription = async (): Promise<void> => {
     if (!subscription) return;
 
     setIsCancelling(true);
@@ -178,7 +164,7 @@ export default function SubscriptionSection() {
     }
   };
 
-  const formatDate = (timestamp: number) => {
+  const formatDate = (timestamp: number): string => {
     return new Date(timestamp * 1000).toLocaleDateString('zh-TW', {
       year: 'numeric',
       month: 'long',
@@ -186,101 +172,123 @@ export default function SubscriptionSection() {
     });
   };
 
-  const getStatusChip = (status: string) => {
+  const formatPrice = (price: number, currency: string): string => {
+    // Handle the pricing display issue - price is in cents for some currencies
+    const displayPrice = currency.toUpperCase() === 'TWD' ? price : price / 100;
+    return currency.toUpperCase() === 'TWD' ? `NT$ ${displayPrice}` : `$${displayPrice}`;
+  };
+
+  const getStatusBadge = (status: string): React.ReactNode => {
     const statusMap = {
-      active: { label: '活躍', color: 'success' as const, icon: <CheckIcon /> },
-      trialing: { label: '試用中', color: 'info' as const, icon: <CheckIcon /> },
-      past_due: { label: '逾期', color: 'warning' as const, icon: <WarningIcon /> },
-      canceled: { label: '已取消', color: 'error' as const, icon: <CancelIcon /> },
-      inactive: { label: '未啟用', color: 'default' as const, icon: <CancelIcon /> },
+      active: { label: '活躍', variant: 'default' as const, icon: <Check className="h-3 w-3" /> },
+      trialing: { label: '試用中', variant: 'secondary' as const, icon: <Check className="h-3 w-3" /> },
+      past_due: { label: '逾期', variant: 'destructive' as const, icon: <AlertTriangle className="h-3 w-3" /> },
+      canceled: { label: '已取消', variant: 'outline' as const, icon: <X className="h-3 w-3" /> },
+      inactive: { label: '未啟用', variant: 'outline' as const, icon: <X className="h-3 w-3" /> },
     };
 
     const config = statusMap[status as keyof typeof statusMap] || statusMap.inactive;
     
     return (
-      <Chip
-        label={config.label}
-        color={config.color}
-        icon={config.icon}
-        size="small"
-      />
+      <Badge variant={config.variant} className="flex items-center gap-1">
+        {config.icon}
+        {config.label}
+      </Badge>
     );
   };
 
   return (
-    <Box p={3}>
-      <Typography variant="h6" gutterBottom>
-        訂閱管理
-      </Typography>
+    <div className="p-6 space-y-6">
+      <div>
+        <h2 className="text-2xl font-semibold tracking-tight">訂閱管理</h2>
+        <p className="text-muted-foreground">
+          管理您的訂閱計劃和付款設定
+        </p>
+      </div>
 
       {actionMessage && (
-        <Alert severity={actionMessage.type} sx={{ mb: 3 }}>
-          {actionMessage.text}
+        <Alert className={cn(
+          actionMessage.type === 'error' && "border-destructive/50 text-destructive dark:border-destructive"
+        )}>
+          <AlertDescription>
+            {actionMessage.text}
+          </AlertDescription>
         </Alert>
       )}
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          載入訂閱資訊時發生錯誤：{error}
+        <Alert className="border-destructive/50 text-destructive dark:border-destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            載入訂閱資訊時發生錯誤：{error}
+          </AlertDescription>
         </Alert>
       )}
 
       {/* Current Subscription Status */}
-      <Card sx={{ mb: 3 }}>
+      <Card>
+        <CardHeader>
+          <CardTitle>當前訂閱狀態</CardTitle>
+          <CardDescription>
+            查看您當前的訂閱計劃和狀態
+          </CardDescription>
+        </CardHeader>
         <CardContent>
-          <Typography variant="h6" gutterBottom>
-            當前訂閱狀態
-          </Typography>
-          
           {isLoading ? (
-            <Box display="flex" alignItems="center" gap={2}>
-              <CircularProgress size={20} />
-              <Typography>載入中...</Typography>
-            </Box>
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>載入中...</span>
+            </div>
           ) : hasActiveSubscription && subscription ? (
-            <Box>
-              <Box display="flex" alignItems="center" gap={2} mb={2}>
-                <Typography variant="h6">
-                  ${subscription.plan.amount / 100} {subscription.plan.currency.toUpperCase()}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  / {subscription.plan.interval === 'month' ? '月' : '年'}
-                </Typography>
-                {getStatusChip(subscription.status)}
-              </Box>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-bold">
+                    {formatPrice(subscription.plan.amount, subscription.plan.currency)}
+                  </span>
+                  <span className="text-muted-foreground">
+                    / {subscription.plan.interval === 'month' ? '月' : '年'}
+                  </span>
+                </div>
+                {getStatusBadge(subscription.status)}
+              </div>
               
-              <Typography variant="body2" color="text.secondary" gutterBottom>
+              <p className="text-sm text-muted-foreground">
                 當前週期：{formatDate(subscription.currentPeriodStart)} - {formatDate(subscription.currentPeriodEnd)}
-              </Typography>
+              </p>
 
-              <Box mt={2} display="flex" gap={2}>
+              <div className="flex gap-2">
                 <Button
-                  variant="contained"
                   onClick={handleManageSubscription}
                   disabled={isOpeningPortal}
-                  startIcon={isOpeningPortal ? <CircularProgress size={20} /> : <CreditCardIcon />}
+                  className="flex items-center gap-2"
                 >
+                  {isOpeningPortal ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CreditCard className="h-4 w-4" />
+                  )}
                   {isOpeningPortal ? '打開中...' : '管理訂閱'}
                 </Button>
                 <Button
-                  variant="outlined"
-                  color="error"
+                  variant="outline"
                   onClick={() => setCancelDialogOpen(true)}
-                  startIcon={<CancelIcon />}
+                  className="flex items-center gap-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
                 >
+                  <X className="h-4 w-4" />
                   取消訂閱
                 </Button>
-              </Box>
-            </Box>
+              </div>
+            </div>
           ) : (
-            <Box>
-              <Typography variant="body1" color="text.secondary" gutterBottom>
+            <div className="text-center py-6">
+              <p className="text-muted-foreground mb-2">
                 您目前沒有活躍的訂閱
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
+              </p>
+              <p className="text-sm text-muted-foreground">
                 選擇下方的訂閱方案開始使用我們的服務
-              </Typography>
-            </Box>
+              </p>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -288,86 +296,124 @@ export default function SubscriptionSection() {
       {/* Subscription Plans */}
       {!hasActiveSubscription && (
         <Card>
+          <CardHeader>
+            <CardTitle>選擇訂閱方案</CardTitle>
+            <CardDescription>
+              選擇最適合您的訂閱計劃
+            </CardDescription>
+          </CardHeader>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
-              選擇訂閱方案
-            </Typography>
+            {plansError && (
+              <Alert className="border-destructive/50 text-destructive dark:border-destructive mb-4">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  {plansError}
+                </AlertDescription>
+              </Alert>
+            )}
             
-            <Grid container spacing={3} mt={1}>
-              {mockPlans.map((plan) => (
-                <Grid item xs={12} md={6} key={plan.id}>
-                  <Card variant="outlined" sx={{ height: '100%' }}>
-                    <CardContent>
-                      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                        <Typography variant="h5" component="div">
-                          {plan.name}
-                        </Typography>
-                        <Box display="flex" alignItems="baseline">
-                          <Typography variant="h4" component="span" color="primary">
-                            ${plan.price}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" ml={1}>
+            {plansLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span className="ml-2">載入訂閱方案...</span>
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {plans.map((plan) => (
+                  <Card key={plan.id} className="relative">
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span>{plan.name}</span>
+                        <div className="text-right">
+                          <span className="text-2xl font-bold">
+                            {formatPrice(plan.price, plan.currency)}
+                          </span>
+                          <span className="text-muted-foreground text-sm ml-1">
                             /{plan.interval === 'month' ? '月' : '年'}
-                          </Typography>
-                        </Box>
-                      </Box>
+                          </span>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {plan.description && (
+                        <div className="text-sm text-muted-foreground">
+                          {plan.description}
+                        </div>
+                      )}
+                      {plan.features.length > 0 && (
+                        <ul className="space-y-2">
+                          {plan.features.map((feature, index) => (
+                            <li key={index} className="flex items-center gap-2">
+                              <Check className="h-4 w-4 text-primary" />
+                              <span className="text-sm">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
 
-                      <List dense>
-                        {plan.features.map((feature, index) => (
-                          <ListItem key={index} sx={{ px: 0 }}>
-                            <ListItemIcon sx={{ minWidth: 32 }}>
-                              <CheckIcon color="primary" fontSize="small" />
-                            </ListItemIcon>
-                            <ListItemText primary={feature} />
-                          </ListItem>
-                        ))}
-                      </List>
-
-                      <Box mt={3}>
-                        <Button
-                          variant="contained"
-                          fullWidth
-                          size="large"
-                          onClick={() => handleSubscribeClick(plan)}
-                          disabled={isCreatingCheckout}
-                          startIcon={isCreatingCheckout ? <CircularProgress size={20} /> : <CreditCardIcon />}
-                        >
-                          {isCreatingCheckout ? '跳轉中...' : '立即訂閱'}
-                        </Button>
-                      </Box>
+                      <Button
+                        className="w-full"
+                        onClick={() => handleSubscribeClick(plan)}
+                        disabled={isCreatingCheckout}
+                      >
+                        {isCreatingCheckout ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            跳轉中...
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="h-4 w-4 mr-2" />
+                            立即訂閱
+                          </>
+                        )}
+                      </Button>
                     </CardContent>
                   </Card>
-                </Grid>
-              ))}
-            </Grid>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
-
       {/* Cancel Subscription Dialog */}
-      <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)}>
-        <DialogTitle>取消訂閱</DialogTitle>
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <DialogContent>
-          <Typography>
-            您確定要取消訂閱嗎？您將可以繼續使用服務直到當前付費週期結束（{subscription && formatDate(subscription.currentPeriodEnd)}），
-            之後將失去對儀表板的訪問權限。
-          </Typography>
+          <DialogHeader>
+            <DialogTitle>取消訂閱</DialogTitle>
+            <DialogDescription>
+              您確定要取消訂閱嗎？您將可以繼續使用服務直到當前付費週期結束
+              {subscription && `（${formatDate(subscription.currentPeriodEnd)}）`}，
+              之後將失去對儀表板的訪問權限。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setCancelDialogOpen(false)}
+            >
+              保留訂閱
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelSubscription}
+              disabled={isCancelling}
+            >
+              {isCancelling ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  取消中...
+                </>
+              ) : (
+                '確認取消'
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCancelDialogOpen(false)}>
-            保留訂閱
-          </Button>
-          <Button
-            onClick={handleCancelSubscription}
-            color="error"
-            disabled={isCancelling}
-            startIcon={isCancelling ? <CircularProgress size={20} /> : null}
-          >
-            {isCancelling ? '取消中...' : '確認取消'}
-          </Button>
-        </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   );
-}
+};
+
+export default SubscriptionSection;
