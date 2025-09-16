@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import {
   Card,
@@ -23,6 +24,7 @@ import { subscriptionApi } from '../api/subscriptionServices';
 import type { SubscriptionResponse, SubscriptionPlan } from '../types';
 
 const LoadingScreen: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <div className="w-full max-w-md space-y-6">
@@ -33,8 +35,8 @@ const LoadingScreen: React.FC = () => {
         
         {/* Loading text */}
         <div className="text-center space-y-2">
-          <h2 className="text-xl font-semibold">檢查訂閱狀態</h2>
-          <p className="text-muted-foreground">正在載入您的帳戶資訊...</p>
+          <h2 className="text-xl font-semibold">{t('subscription.checking')}</h2>
+          <p className="text-muted-foreground">{t('subscription.loading')}</p>
         </div>
         
         {/* Loading skeleton */}
@@ -55,6 +57,7 @@ const LoadingScreen: React.FC = () => {
 };
 
 const SubscriptionRequiredPage: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -71,7 +74,7 @@ const SubscriptionRequiredPage: React.FC = () => {
         // Set default plans as fallback
         setPlans([{
           id: 'professional_monthly',
-          name: '專業方案',
+          name: t('subscription.planTitle'),
           price: 500,
           currency: 'TWD',
           interval: 'month',
@@ -92,12 +95,12 @@ const SubscriptionRequiredPage: React.FC = () => {
   };
 
   const getDefaultFeatures = () => [
-    '無限制工廠管理',
-    '實時機器監控',
-    '數據分析報告', 
-    '警報系統',
-    '24/7 客戶支持',
-    '數據導出功能',
+    t('subscription.features.unlimitedFactories'),
+    t('subscription.features.realtimeMonitoring'),
+    t('subscription.features.dataAnalysis'),
+    t('subscription.features.alertSystem'),
+    t('subscription.features.support24x7'),
+    t('subscription.features.dataExport'),
   ];
 
   // Get the primary plan (first one or professional if available)
@@ -120,27 +123,27 @@ const SubscriptionRequiredPage: React.FC = () => {
     <div className="container max-w-2xl mx-auto py-16 px-4">
       <div className="text-center mb-8">
         <Lock className="mx-auto h-20 w-20 text-primary mb-4" />
-        <h1 className="text-4xl font-bold mb-4">需要訂閱</h1>
+        <h1 className="text-4xl font-bold mb-4">{t('subscription.required')}</h1>
         <p className="text-xl text-muted-foreground">
-          訪問 OPC UA 儀表板需要有效的訂閱
+          {t('subscription.description')}
         </p>
       </div>
 
       <Alert className="mb-6">
         <AlertDescription>
-          您好 {user?.username}！要繼續使用我們的工業監控平台，請升級到付費訂閱。
+          {t('subscription.greeting', { username: user?.username })}
         </AlertDescription>
       </Alert>
 
       <Card className="mb-6">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">{primaryPlan?.name || '訂閱方案'}</CardTitle>
+          <CardTitle className="text-2xl">{primaryPlan?.name || t('subscription.planTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           {plansLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin" />
-              <span className="ml-2">載入方案資訊...</span>
+              <span className="ml-2">{t('subscription.loadingPlans')}</span>
             </div>
           ) : (
             <>
@@ -149,12 +152,12 @@ const SubscriptionRequiredPage: React.FC = () => {
                   {primaryPlan ? formatPrice(primaryPlan.price, primaryPlan.currency) : 'NT$ 500'}
                 </span>
                 <span className="text-muted-foreground ml-2">
-                  /{primaryPlan?.interval === 'month' ? '月' : '年'}
+                  /{primaryPlan?.interval === 'month' ? t('subscription.month') : t('subscription.year')}
                 </span>
               </div>
 
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-3">包含功能：</h3>
+                <h3 className="text-lg font-semibold mb-3">{t('subscription.includesFeatures')}:</h3>
                 <ul className="space-y-2">
                   {features.map((feature, index) => (
                     <li key={index} className="flex items-center gap-2">
@@ -174,25 +177,25 @@ const SubscriptionRequiredPage: React.FC = () => {
               className="px-8 py-3"
             >
               <CreditCard className="h-5 w-5 mr-2" />
-              立即訂閱
+              {t('subscription.upgradeNow')}
             </Button>
           </div>
 
           <p className="text-sm text-muted-foreground text-center mt-4">
-            隨時可以取消 • 安全支付 • 即時啟用
+            {t('subscription.terms')}
           </p>
         </CardContent>
       </Card>
 
       <div className="text-center space-y-4">
         <p className="text-muted-foreground">
-          已經有訂閱了？請檢查您的訂閱狀態在{' '}
+          {t('subscription.alreadySubscribed')}{' '}
           <Button 
             variant="link" 
             className="p-0 h-auto"
             onClick={() => window.location.href = '/settings'}
           >
-            設定頁面
+            {t('subscription.settingsPage')}
           </Button>
         </p>
         
@@ -207,7 +210,7 @@ const SubscriptionRequiredPage: React.FC = () => {
           ) : (
             <RefreshCw className="h-4 w-4" />
           )}
-          {isRefreshing ? '檢查中...' : '重新檢查訂閱狀態'}
+          {isRefreshing ? t('subscription.refreshing') : t('subscription.refresh')}
         </Button>
       </div>
     </div>

@@ -10,7 +10,7 @@ import { RouterLink } from "src/routes/components";
 import { useResponsive } from "src/hooks/use-responsive";
 
 import { NAV } from "./config-layout";
-import navConfig from "./config-navigation";
+import { useNavConfig } from "./config-navigation";
 import { BottomNav } from "./bottom-nav";
 
 interface NavProps {
@@ -28,6 +28,7 @@ interface NavItemProps {
 
 export default function Nav({ openNav, onCloseNav }: NavProps) {
   const pathname = usePathname();
+  const navConfig = useNavConfig();
   const upLg = useResponsive("up", "lg");
 
   const account = {
@@ -63,14 +64,14 @@ export default function Nav({ openNav, onCloseNav }: NavProps) {
           </div>
           <nav className="px-2 space-y-1">
             {navConfig.map((item) => (
-              <NavItem key={item.title} item={item} />
+              <NavItem key={item.path} item={item} />
             ))}
           </nav>
           <div className="flex-grow" />
         </div>
       </ScrollArea>
     ),
-    [account.displayName, account.email, account.photoURL]
+    [account.displayName, account.email, account.photoURL, navConfig]
   );
 
   return (

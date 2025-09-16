@@ -1,0 +1,63 @@
+{
+  "personalSettings": {
+    "title": "個人設定",
+    "description": "管理您的帳戶資訊和偏好設定",
+    "personalInfo": {
+      "title": "個人資訊",
+      "description": "更新您的帳戶基本資訊",
+      "username": "用戶名",
+      "email": "電子郵件",
+      "usernameRequired": "用戶名為必填項",
+      "usernameMinLength": "用戶名至少需要2個字符",
+      "emailRequired": "電子郵件為必填項",
+      "emailInvalid": "請輸入有效的電子郵件地址",
+      "saveChanges": "保存更改",
+      "updating": "更新中...",
+      "changePassword": "更改密碼",
+      "updateSuccess": "個人資訊已成功更新",
+      "updateError": "更新失敗，請稍後再試"
+    },
+    "appSettings": {
+      "title": "應用程式設定",
+      "description": "自訂您的應用程式體驗",
+      "language": {
+        "title": "語言設定",
+        "current": "當前語言",
+        "switch": "切換語言",
+        "traditionalChinese": "繁體中文",
+        "simplifiedChinese": "簡體中文",
+        "english": "English"
+      },
+      "theme": {
+        "title": "主題設定",
+        "current": "當前主題",
+        "lightMode": "淺色模式",
+        "darkMode": "深色模式",
+        "switchToLight": "淺色模式",
+        "switchToDark": "深色模式"
+      },
+      "logout": {
+        "title": "登出帳戶",
+        "description": "結束當前會話並返回登錄頁面",
+        "button": "登出"
+      }
+    },
+    "passwordDialog": {
+      "title": "更改密碼",
+      "description": "請輸入您的當前密碼和新密碼",
+      "currentPassword": "當前密碼",
+      "newPassword": "新密碼",
+      "confirmPassword": "確認新密碼",
+      "currentPasswordRequired": "請輸入當前密碼",
+      "newPasswordRequired": "請輸入新密碼",
+      "passwordMinLength": "密碼至少需要8個字符",
+      "confirmPasswordRequired": "請確認新密碼",
+      "passwordMismatch": "密碼不匹配",
+      "cancel": "取消",
+      "change": "更改密碼",
+      "changing": "更改中...",
+      "changeSuccess": "密碼已成功更改",
+      "changeError": "密碼更改失敗，請檢查當前密碼是否正確"
+    }
+  }
+}

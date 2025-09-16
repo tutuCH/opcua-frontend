@@ -8,7 +8,11 @@ import { HelmetProvider } from 'react-helmet-async';
 import { setupAxiosInterceptors } from 'src/utils/axiosInterceptor';  // Setup Axios interceptors
 import { AuthProvider } from 'src/contexts/AuthContext';
 import { ThemeProvider } from "@/components/theme-provider";
+import { WebSocketProvider } from "@/contexts/WebSocketContext";
 // import { Toaster } from "src/components/ui/toaster";
+
+// Import i18n
+import './i18n';
 
 import App from './app';
 
@@ -24,11 +28,13 @@ root.render(
       {/* Add ThemeProvider for shadcn UI theming support */}
       <ThemeProvider defaultTheme="light" storageKey="ui-theme">
         <AuthProvider>
-          <Suspense>
-            <App />
-            {/* Add Toaster component for notifications */}
-            {/* <Toaster /> */}
-          </Suspense>
+          <WebSocketProvider>
+            <Suspense fallback={<div>Loading...</div>}>
+              <App />
+              {/* Add Toaster component for notifications */}
+              {/* <Toaster /> */}
+            </Suspense>
+          </WebSocketProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

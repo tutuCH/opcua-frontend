@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from 'src/lib/utils';
 import {
   Card,
@@ -38,6 +39,7 @@ interface ActionMessage {
 
 
 const SubscriptionSection: React.FC = () => {
+  const { t } = useTranslation();
   const { hasActiveSubscription } = useAuth();
   const { subscription, isLoading, error, cancelSubscription } = useSubscription();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -65,7 +67,7 @@ const SubscriptionSection: React.FC = () => {
         setPlans(transformedPlans);
       } catch (err) {
         console.error('Failed to fetch plans:', err);
-        setPlansError('無法載入訂閱方案，請稍後再試');
+        setPlansError(t('subscription.errors.loadPlans'));
       } finally {
         setPlansLoading(false);
       }
@@ -92,16 +94,16 @@ const SubscriptionSection: React.FC = () => {
       console.error('Failed to create checkout session:', err);
       
       // Provide more detailed error messages
-      let errorMessage = '無法創建付款頁面，請稍後再試';
+      let errorMessage = t('subscription.errors.createCheckout');
       if (err instanceof Error) {
         if (err.message.includes('network') || err.message.includes('fetch')) {
-          errorMessage = '網絡連接問題，請檢查網絡並重試';
+          errorMessage = t('subscription.errors.networkError');
         } else if (err.message.includes('401') || err.message.includes('unauthorized')) {
-          errorMessage = '認證失效，請重新登錄';
+          errorMessage = t('subscription.errors.authError');
         } else if (err.message.includes('Invalid checkout')) {
-          errorMessage = '付款設置錯誤，請聯繫客服';
+          errorMessage = t('subscription.errors.paymentSetupError');
         } else if (err.message.includes('400')) {
-          errorMessage = '請求參數錯誤，請稍後再試';
+          errorMessage = t('subscription.errors.requestError');
         }
       }
       
@@ -126,14 +128,14 @@ const SubscriptionSection: React.FC = () => {
     } catch (err) {
       console.error('Failed to open customer portal:', err);
       
-      let errorMessage = '無法打開管理頁面，請稍後再試';
+      let errorMessage = t('subscription.errors.openPortal');
       if (err instanceof Error) {
         if (err.message.includes('network') || err.message.includes('fetch')) {
-          errorMessage = '網絡連接問題，請檢查網絡並重試';
+          errorMessage = t('subscription.errors.networkError');
         } else if (err.message.includes('401') || err.message.includes('unauthorized')) {
-          errorMessage = '認證失效，請重新登錄';
+          errorMessage = t('subscription.errors.authError');
         } else if (err.message.includes('400')) {
-          errorMessage = '請求參數錯誤，請稍後再試';
+          errorMessage = t('subscription.errors.requestError');
         }
       }
       
@@ -155,10 +157,10 @@ const SubscriptionSection: React.FC = () => {
         immediately: false,
       });
       setCancelDialogOpen(false);
-      setActionMessage({ type: 'success', text: '訂閱已取消，將在當前付費週期結束時停止。' });
+      setActionMessage({ type: 'success', text: t('subscription.actions.cancelSuccess') });
     } catch (err) {
       console.error('Failed to cancel subscription:', err);
-      setActionMessage({ type: 'error', text: '取消訂閱失敗，請稍後再試' });
+      setActionMessage({ type: 'error', text: t('subscription.errors.cancelError') });
     } finally {
       setIsCancelling(false);
     }
@@ -180,11 +182,11 @@ const SubscriptionSection: React.FC = () => {
 
   const getStatusBadge = (status: string): React.ReactNode => {
     const statusMap = {
-      active: { label: '活躍', variant: 'default' as const, icon: <Check className="h-3 w-3" /> },
-      trialing: { label: '試用中', variant: 'secondary' as const, icon: <Check className="h-3 w-3" /> },
-      past_due: { label: '逾期', variant: 'destructive' as const, icon: <AlertTriangle className="h-3 w-3" /> },
-      canceled: { label: '已取消', variant: 'outline' as const, icon: <X className="h-3 w-3" /> },
-      inactive: { label: '未啟用', variant: 'outline' as const, icon: <X className="h-3 w-3" /> },
+      active: { label: t('subscription.status.active'), variant: 'default' as const, icon: <Check className="h-3 w-3" /> },
+      trialing: { label: t('subscription.status.trialing'), variant: 'secondary' as const, icon: <Check className="h-3 w-3" /> },
+      past_due: { label: t('subscription.status.pastDue'), variant: 'destructive' as const, icon: <AlertTriangle className="h-3 w-3" /> },
+      canceled: { label: t('subscription.status.canceled'), variant: 'outline' as const, icon: <X className="h-3 w-3" /> },
+      inactive: { label: t('subscription.status.inactive'), variant: 'outline' as const, icon: <X className="h-3 w-3" /> },
     };
 
     const config = statusMap[status as keyof typeof statusMap] || statusMap.inactive;
@@ -200,9 +202,9 @@ const SubscriptionSection: React.FC = () => {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight">訂閱管理</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">{t('settings.tabs.subscription')}</h2>
         <p className="text-muted-foreground">
-          管理您的訂閱計劃和付款設定
+          {t('subscription.sectionDescription')}
         </p>
       </div>
 
@@ -220,7 +222,7 @@ const SubscriptionSection: React.FC = () => {
         <Alert className="border-destructive/50 text-destructive dark:border-destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            載入訂閱資訊時發生錯誤：{error}
+            {t('subscription.errors.loadSubscription')}: {error}
           </AlertDescription>
         </Alert>
       )}
@@ -228,16 +230,16 @@ const SubscriptionSection: React.FC = () => {
       {/* Current Subscription Status */}
       <Card>
         <CardHeader>
-          <CardTitle>當前訂閱狀態</CardTitle>
+          <CardTitle>{t('subscription.currentStatus.title')}</CardTitle>
           <CardDescription>
-            查看您當前的訂閱計劃和狀態
+            {t('subscription.currentStatus.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>載入中...</span>
+              <span>{t('subscription.loading')}</span>
             </div>
           ) : hasActiveSubscription && subscription ? (
             <div className="space-y-4">
@@ -247,14 +249,14 @@ const SubscriptionSection: React.FC = () => {
                     {formatPrice(subscription.plan.amount, subscription.plan.currency)}
                   </span>
                   <span className="text-muted-foreground">
-                    / {subscription.plan.interval === 'month' ? '月' : '年'}
+                    / {subscription.plan.interval === 'month' ? t('subscription.month') : t('subscription.year')}
                   </span>
                 </div>
                 {getStatusBadge(subscription.status)}
               </div>
               
               <p className="text-sm text-muted-foreground">
-                當前週期：{formatDate(subscription.currentPeriodStart)} - {formatDate(subscription.currentPeriodEnd)}
+                {t('subscription.currentPeriod')}: {formatDate(subscription.currentPeriodStart)} - {formatDate(subscription.currentPeriodEnd)}
               </p>
 
               <div className="flex gap-2">
@@ -268,7 +270,7 @@ const SubscriptionSection: React.FC = () => {
                   ) : (
                     <CreditCard className="h-4 w-4" />
                   )}
-                  {isOpeningPortal ? '打開中...' : '管理訂閱'}
+                  {isOpeningPortal ? t('subscription.actions.opening') : t('subscription.actions.manageSubscription')}
                 </Button>
                 <Button
                   variant="outline"
@@ -276,17 +278,17 @@ const SubscriptionSection: React.FC = () => {
                   className="flex items-center gap-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
                 >
                   <X className="h-4 w-4" />
-                  取消訂閱
+                  {t('subscription.cancelSubscription')}
                 </Button>
               </div>
             </div>
           ) : (
             <div className="text-center py-6">
               <p className="text-muted-foreground mb-2">
-                您目前沒有活躍的訂閱
+                {t('subscription.noActiveSubscription')}
               </p>
               <p className="text-sm text-muted-foreground">
-                選擇下方的訂閱方案開始使用我們的服務
+                {t('subscription.selectPlanToStart')}
               </p>
             </div>
           )}
@@ -297,9 +299,9 @@ const SubscriptionSection: React.FC = () => {
       {!hasActiveSubscription && (
         <Card>
           <CardHeader>
-            <CardTitle>選擇訂閱方案</CardTitle>
+            <CardTitle>{t('subscription.planSelection.title')}</CardTitle>
             <CardDescription>
-              選擇最適合您的訂閱計劃
+              {t('subscription.planSelection.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -315,7 +317,7 @@ const SubscriptionSection: React.FC = () => {
             {plansLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin" />
-                <span className="ml-2">載入訂閱方案...</span>
+                <span className="ml-2">{t('subscription.loadingPlans')}</span>
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -329,7 +331,7 @@ const SubscriptionSection: React.FC = () => {
                             {formatPrice(plan.price, plan.currency)}
                           </span>
                           <span className="text-muted-foreground text-sm ml-1">
-                            /{plan.interval === 'month' ? '月' : '年'}
+                            /{plan.interval === 'month' ? t('subscription.month') : t('subscription.year')}
                           </span>
                         </div>
                       </CardTitle>
@@ -359,12 +361,12 @@ const SubscriptionSection: React.FC = () => {
                         {isCreatingCheckout ? (
                           <>
                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                            跳轉中...
+                            {t('subscription.redirecting')}
                           </>
                         ) : (
                           <>
                             <CreditCard className="h-4 w-4 mr-2" />
-                            立即訂閱
+                            {t('subscription.upgradeNow')}
                           </>
                         )}
                       </Button>
@@ -381,11 +383,11 @@ const SubscriptionSection: React.FC = () => {
       <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>取消訂閱</DialogTitle>
+            <DialogTitle>{t('subscription.cancelSubscription')}</DialogTitle>
             <DialogDescription>
-              您確定要取消訂閱嗎？您將可以繼續使用服務直到當前付費週期結束
+              {t('subscription.cancelConfirmation')}
               {subscription && `（${formatDate(subscription.currentPeriodEnd)}）`}，
-              之後將失去對儀表板的訪問權限。
+              {t('subscription.cancelWarning')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -393,7 +395,7 @@ const SubscriptionSection: React.FC = () => {
               variant="outline" 
               onClick={() => setCancelDialogOpen(false)}
             >
-              保留訂閱
+              {t('subscription.keepSubscription')}
             </Button>
             <Button
               variant="destructive"
@@ -403,10 +405,10 @@ const SubscriptionSection: React.FC = () => {
               {isCancelling ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  取消中...
+                  {t('subscription.cancelling')}
                 </>
               ) : (
-                '確認取消'
+                t('subscription.actions.confirmCancel')
               )}
             </Button>
           </DialogFooter>

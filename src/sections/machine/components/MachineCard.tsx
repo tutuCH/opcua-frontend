@@ -1,15 +1,17 @@
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, Pin, MoreHorizontal } from 'lucide-react';
+import { TrendingUp, TrendingDown, Pin, MoreHorizontal, Wifi, WifiOff, Clock } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { useTranslation } from 'react-i18next';
+import { WebSocketEventData, MachineRealtimeData } from '@/services/websocketService';
 
 export interface MachineData {
   id: string;
   name: string;
   site: string;
   line: string;
-  status: 'Running' | 'Idle' | 'Alarm' | 'Maintenance';
+  status: 'Running' | 'Idle' | 'Alarm' | 'Maintenance' | 'Warning' | 'Offline';
   utilization: number;
   utilizationTrend: 'up' | 'down';
   cycleTime: number;
@@ -22,6 +24,12 @@ export interface MachineData {
   alarmTime: string | null;
   dataAge: number;
   setpointsChanged: boolean;
+  // WebSocket real-time data
+  temperature?: number;
+  oilTemperature?: number;
+  operationMode?: number;
+  autoTestStatus?: number;
+  lastUpdate?: Date;
 }
 
 interface SparklineData {
@@ -33,16 +41,43 @@ interface SparklineData {
 interface MachineCardProps {
   machine: MachineData;
   sparklineData: SparklineData[];
+  isConnected?: boolean;
+  realtimeData?: WebSocketEventData;
 }
 
 const statusColors = {
   Running: 'bg-teal-600',
   Idle: 'bg-slate-500', 
   Alarm: 'bg-red-600',
-  Maintenance: 'bg-amber-500'
+  Maintenance: 'bg-amber-500',
+  Warning: 'bg-orange-500',
+  Offline: 'bg-gray-400'
 } as const;
 
-export function MachineCard({ machine, sparklineData }: MachineCardProps) {
+export function MachineCard({ machine, sparklineData, isConnected = false, realtimeData }: MachineCardProps) {
+  const { t } = useTranslation();
+  
+  const formatLastUpdate = (lastUpdate?: Date) => {
+    if (!lastUpdate) return null;
+    const now = new Date();
+    const diffMs = now.getTime() - lastUpdate.getTime();
+    const diffSeconds = Math.floor(diffMs / 1000);
+    
+    if (diffSeconds < 60) return `${diffSeconds}s ago`;
+    if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
+    return `${Math.floor(diffSeconds / 3600)}h ago`;
+  };
+  
+  const getOperationModeText = (mode?: number) => {
+    switch (mode) {
+      case -1: return 'Stopped';
+      case 0: return 'Manual';
+      case 1: return 'Auto';
+      case 2: return 'Setup';
+      default: return 'Unknown';
+    }
+  };
+  
   return (
     <Card className="relative">
       {/* Status Strip */}
@@ -63,14 +98,31 @@ export function MachineCard({ machine, sparklineData }: MachineCardProps) {
               >
                 <Pin className="h-3 w-3" />
               </Button>
+              {/* WebSocket connection indicator */}
+              {isConnected ? (
+                <Wifi className="h-3 w-3 text-green-500" />
+              ) : (
+                <WifiOff className="h-3 w-3 text-gray-400" />
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">{machine.site} › {machine.line}</p>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>{machine.site} › {machine.line}</span>
+              {machine.lastUpdate && (
+                <>
+                  <span>•</span>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    <span>{formatLastUpdate(machine.lastUpdate)}</span>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
           <Badge 
             variant="secondary" 
             className={`${statusColors[machine.status]} text-white text-xs`}
           >
-            ● {machine.status}
+            ● {t(`machineStatus.${machine.status.toLowerCase()}`)}
           </Badge>
         </div>
       </CardHeader>
@@ -87,7 +139,7 @@ export function MachineCard({ machine, sparklineData }: MachineCardProps) {
                 <TrendingDown className="h-3 w-3 text-red-600" />
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Utilization</p>
+            <p className="text-xs text-muted-foreground">{t('machineCard.utilization')}</p>
           </div>
           
           <div className="text-center">
@@ -99,19 +151,19 @@ export function MachineCard({ machine, sparklineData }: MachineCardProps) {
                 </span>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Cycle Time</p>
+            <p className="text-xs text-muted-foreground">{t('machineCard.cycleTime')}</p>
           </div>
           
           <div className="text-center">
             <p className="text-lg font-bold">{machine.shotCount.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">Shot Count</p>
+            <p className="text-xs text-muted-foreground">{t('machineCard.shotCount')}</p>
           </div>
         </div>
 
         {/* Sparklines */}
         <div className="space-y-2">
           <div>
-            <p className="text-xs text-muted-foreground mb-1">Cycle Time (60min)</p>
+            <p className="text-xs text-muted-foreground mb-1">{t('machineCard.cycleTime60min')}</p>
             <div className="h-8">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={sparklineData}>
@@ -128,7 +180,7 @@ export function MachineCard({ machine, sparklineData }: MachineCardProps) {
           </div>
           
           <div>
-            <p className="text-xs text-muted-foreground mb-1">Shot Rate (/min)</p>
+            <p className="text-xs text-muted-foreground mb-1">{t('machineCard.shotRateMin')}</p>
             <div className="h-8">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={sparklineData}>
@@ -150,13 +202,33 @@ export function MachineCard({ machine, sparklineData }: MachineCardProps) {
           <p className="text-xs text-muted-foreground truncate">
             {machine.condition} · {machine.mold}
           </p>
+          {/* Real-time temperature data */}
+          {(machine.temperature || machine.oilTemperature) && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {machine.temperature && (
+                <span>T1: {machine.temperature}°C</span>
+              )}
+              {machine.oilTemperature && (
+                <>
+                  {machine.temperature && <span>•</span>}
+                  <span>Oil: {machine.oilTemperature}°C</span>
+                </>
+              )}
+            </div>
+          )}
+          {/* Operation mode */}
+          {machine.operationMode !== undefined && (
+            <div className="text-xs text-muted-foreground">
+              Mode: {getOperationModeText(machine.operationMode)}
+            </div>
+          )}
         </div>
 
         {/* Badges */}
         <div className="flex flex-wrap gap-2">
           {machine.setpointsChanged && (
             <Badge variant="outline" className="text-xs text-blue-600 border-blue-600">
-              Setpoints changed
+              {t('machineCard.setpointsChanged')}
             </Badge>
           )}
           <Badge 
@@ -167,7 +239,7 @@ export function MachineCard({ machine, sparklineData }: MachineCardProps) {
               'text-muted-foreground'
             }`}
           >
-            Data age: {machine.dataAge}s
+            {t('machineCard.dataAge')}: {machine.dataAge}s
           </Badge>
         </div>
       </CardContent>
@@ -176,10 +248,10 @@ export function MachineCard({ machine, sparklineData }: MachineCardProps) {
         <div className="flex items-center justify-between w-full">
           <div className="flex gap-1">
             <Button variant="outline" size="sm">
-              Open Machine
+              {t('machineCard.openMachine')}
             </Button>
             <Button variant="outline" size="sm">
-              24h Quality
+              {t('machineCard.quality24h')}
             </Button>
           </div>
           <Button variant="ghost" size="sm">

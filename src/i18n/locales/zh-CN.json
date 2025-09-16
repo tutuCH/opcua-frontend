@@ -1,0 +1,63 @@
+{
+  "personalSettings": {
+    "title": "个人设定",
+    "description": "管理您的账户信息和偏好设定",
+    "personalInfo": {
+      "title": "个人信息",
+      "description": "更新您的账户基本信息",
+      "username": "用户名",
+      "email": "电子邮箱",
+      "usernameRequired": "用户名为必填项",
+      "usernameMinLength": "用户名至少需要2个字符",
+      "emailRequired": "电子邮箱为必填项",
+      "emailInvalid": "请输入有效的电子邮箱地址",
+      "saveChanges": "保存更改",
+      "updating": "更新中...",
+      "changePassword": "更改密码",
+      "updateSuccess": "个人信息已成功更新",
+      "updateError": "更新失败，请稍后再试"
+    },
+    "appSettings": {
+      "title": "应用程序设定",
+      "description": "自定义您的应用程序体验",
+      "language": {
+        "title": "语言设定",
+        "current": "当前语言",
+        "switch": "切换语言",
+        "traditionalChinese": "繁体中文",
+        "simplifiedChinese": "简体中文",
+        "english": "English"
+      },
+      "theme": {
+        "title": "主题设定",
+        "current": "当前主题",
+        "lightMode": "浅色模式",
+        "darkMode": "深色模式",
+        "switchToLight": "浅色模式",
+        "switchToDark": "深色模式"
+      },
+      "logout": {
+        "title": "登出账户",
+        "description": "结束当前会话并返回登录页面",
+        "button": "登出"
+      }
+    },
+    "passwordDialog": {
+      "title": "更改密码",
+      "description": "请输入您的当前密码和新密码",
+      "currentPassword": "当前密码",
+      "newPassword": "新密码",
+      "confirmPassword": "确认新密码",
+      "currentPasswordRequired": "请输入当前密码",
+      "newPasswordRequired": "请输入新密码",
+      "passwordMinLength": "密码至少需要8个字符",
+      "confirmPasswordRequired": "请确认新密码",
+      "passwordMismatch": "密码不匹配",
+      "cancel": "取消",
+      "change": "更改密码",
+      "changing": "更改中...",
+      "changeSuccess": "密码已成功更改",
+      "changeError": "密码更改失败，请检查当前密码是否正确"
+    }
+  }
+}

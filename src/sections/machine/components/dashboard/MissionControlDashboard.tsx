@@ -15,10 +15,10 @@ import {
   filterDataByTimeRange, 
   filterDataByMachine 
 } from "src/utils/chartDataProcessors"
-
-// Import sample data
-import elinkSampleData from "src/_mock/elink_full_samples.json"
 import type { ProcessedDataPoint } from "src/types/dashboard"
+import { useWebSocketContext } from "@/contexts/WebSocketContext"
+import type { WebSocketEventData, MachineRealtimeData, MachineSPCData } from "@/services/websocketService"
+import { useDashboard } from "./DashboardContext"
 
 interface MissionControlDashboardProps {
   // Optional props for customization
@@ -32,12 +32,99 @@ interface MissionControlDashboardProps {
  */
 function MissionControlDashboardCore({ data, className }: MissionControlDashboardProps) {
   const layoutConfig = useResponsiveLayout()
+  const { selectedMachine } = useDashboard()
+
+  // Maintain a rolling buffer of raw entries built from WebSocket events
+  type RawEntry = {
+    devId: string
+    topic: string
+    sendTime: string
+    sendStamp: number
+    time: string
+    timestamp: number
+    Data: Record<string, any>
+  }
+
+  const [rawEntries, setRawEntries] = React.useState<RawEntry[]>([])
+
+  // Convert WebSocket context data to raw entries format
+  React.useEffect(() => {
+    const newEntries: RawEntry[] = []
+
+    // Process realtime data
+    realtimeData.forEach((evt) => {
+      const payload = evt.data as MachineRealtimeData
+      if (payload?.Data) {
+        newEntries.push({
+          devId: evt.deviceId || payload.devId,
+          topic: payload.topic || "realtime",
+          sendTime: payload.sendTime,
+          sendStamp: payload.sendStamp,
+          time: payload.time,
+          timestamp: typeof payload.timestamp === "number" ? payload.timestamp : Date.now(),
+          Data: { ...payload.Data }
+        })
+      }
+    })
+
+    // Process SPC data
+    spcData.forEach((evt) => {
+      const payload = evt.data as MachineSPCData
+      if (payload?.Data) {
+        newEntries.push({
+          devId: evt.deviceId || payload.devId,
+          topic: payload.topic || "spc",
+          sendTime: payload.sendTime,
+          sendStamp: payload.sendStamp,
+          time: payload.time,
+          timestamp: typeof payload.timestamp === "number" ? payload.timestamp : Date.now(),
+          Data: { ...payload.Data }
+        })
+      }
+    })
+
+    // Sort by timestamp and keep last 1000 points
+    newEntries.sort((a, b) => a.timestamp - b.timestamp)
+    setRawEntries(newEntries.slice(-1000))
+  }, [realtimeData, spcData, realtimeUpdateCount, spcUpdateCount])
+
+  // WebSocket integration: use centralized context
+  const {
+    isConnected,
+    subscribeToMachine,
+    unsubscribeFromMachine,
+    realtimeData,
+    spcData,
+    realtimeUpdateCount,
+    spcUpdateCount
+  } = useWebSocketContext()
+
+  // Manage subscription based on selected machine
+  React.useEffect(() => {
+    if (!isConnected) return
+    if (selectedMachine && selectedMachine !== 'all') {
+      subscribeToMachine(selectedMachine)
+      return () => {
+        unsubscribeFromMachine(selectedMachine)
+      }
+    }
+    return
+  }, [isConnected, selectedMachine, subscribeToMachine, unsubscribeFromMachine])
   
   // Process sample data or provided data
   const processedData = React.useMemo((): ProcessedDataPoint[] => {
-    const sourceData = data || elinkSampleData
+    // Prefer external data prop if provided; otherwise use live WebSocket buffer
+    const sourceData = (data as any[] | undefined) || rawEntries
     return processOPCUAData(sourceData)
-  }, [data])
+  }, [data, rawEntries])
+
+  // Optionally filter by selected machine when not "all"
+  const displayData = React.useMemo(() => {
+    if (!processedData.length) return processedData
+    return selectedMachine && selectedMachine !== 'all'
+      ? filterDataByMachine(processedData, selectedMachine)
+      : processedData
+  }, [processedData, selectedMachine])
 
   return (
     <div className={className}>
@@ -45,19 +132,19 @@ function MissionControlDashboardCore({ data, className }: MissionControlDashboar
         {...layoutConfig}
         statusBar={
           <StatusBar 
-            data={processedData}
+            data={displayData}
             showMachineSelector={true}
             showViewMode={true}
           />
         }
         leftPanel={
-          <LeftContextPanel data={processedData} />
+          <LeftContextPanel data={displayData} />
         }
         rightPanel={
-          <RightInsightsPanel data={processedData} />
+          <RightInsightsPanel data={displayData} />
         }
         timelinePanel={
-          <TimelinePanel data={processedData} />
+          <TimelinePanel data={displayData} />
         }
       >
         {/* Main Chart Display Area */}
@@ -67,7 +154,7 @@ function MissionControlDashboardCore({ data, className }: MissionControlDashboar
           
           {/* Contextual Chart Router */}
           <ContextualChartRouter 
-            data={processedData}
+            data={displayData}
             className="w-full"
           />
         </div>

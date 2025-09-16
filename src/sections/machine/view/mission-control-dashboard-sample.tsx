@@ -168,7 +168,7 @@ export default function MissionControlDashboardSample() {
 
               <div className="mt-auto p-4 border-t">
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                  <div className="h-2 w-2 rounded-full bg-green-500" />
                   <span>System Online</span>
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">

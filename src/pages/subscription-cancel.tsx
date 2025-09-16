@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -14,6 +15,7 @@ import {
 } from '@mui/icons-material';
 
 export default function SubscriptionCancel() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handleReturnToSettings = () => {
@@ -43,13 +45,13 @@ export default function SubscriptionCancel() {
             }} 
           />
           <Typography variant="h4" gutterBottom color="warning.main">
-            訂閱已取消
+            {t('subscription.cancel.title')}
           </Typography>
           <Typography variant="h6" gutterBottom>
-            您的付款過程已被取消
+            {t('subscription.cancel.subtitle')}
           </Typography>
           <Typography variant="body1" color="text.secondary" mb={4}>
-            沒有問題！您可以隨時返回完成訂閱流程。您的賬戶沒有被收取任何費用。
+            {t('subscription.cancel.description')}
           </Typography>
           
           <Box display="flex" gap={2} justifyContent="center" flexWrap="wrap">
@@ -59,20 +61,20 @@ export default function SubscriptionCancel() {
               onClick={handleTryAgain}
               startIcon={<RefreshIcon />}
             >
-              重新訂閱
+              {t('subscription.cancel.tryAgain')}
             </Button>
             <Button
               variant="outlined"
               onClick={handleReturnToSettings}
               startIcon={<ArrowBackIcon />}
             >
-              返回設置
+              {t('subscription.cancel.backToSettings')}
             </Button>
           </Box>
 
           <Box mt={4} p={2} sx={{ backgroundColor: 'grey.50', borderRadius: 1 }}>
             <Typography variant="body2" color="text.secondary">
-              如果您在訂閱過程中遇到任何問題，請聯繫我們的客服團隊，我們很樂意為您提供幫助。
+              {t('subscription.cancel.supportNote')}
             </Typography>
           </Box>
         </CardContent>

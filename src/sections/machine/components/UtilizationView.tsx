@@ -1,8 +1,8 @@
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts'
+import { TrendingUp, TrendingDown, Clock, Activity } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts'
-import { TrendingUp, TrendingDown, Clock, Activity } from 'lucide-react'
 
 const utilizationData = [
   { name: 'Running', value: 65, color: '#0ea5a4' },
@@ -274,7 +274,7 @@ export function UtilizationView() {
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950 rounded-lg">
-              <div className="w-2 h-2 rounded-full bg-red-600 mt-2"></div>
+              <div className="w-2 h-2 rounded-full bg-red-600 mt-2" />
               <div className="flex-1">
                 <p className="font-medium text-red-900 dark:text-red-100">Address M003 Critical Utilization</p>
                 <p className="text-sm text-red-700 dark:text-red-300">
@@ -285,7 +285,7 @@ export function UtilizationView() {
             </div>
             
             <div className="flex items-start gap-3 p-3 bg-amber-50 dark:bg-amber-950 rounded-lg">
-              <div className="w-2 h-2 rounded-full bg-amber-600 mt-2"></div>
+              <div className="w-2 h-2 rounded-full bg-amber-600 mt-2" />
               <div className="flex-1">
                 <p className="font-medium text-amber-900 dark:text-amber-100">Optimize Idle Time</p>
                 <p className="text-sm text-amber-700 dark:text-amber-300">
@@ -296,7 +296,7 @@ export function UtilizationView() {
             </div>
             
             <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
-              <div className="w-2 h-2 rounded-full bg-green-600 mt-2"></div>
+              <div className="w-2 h-2 rounded-full bg-green-600 mt-2" />
               <div className="flex-1">
                 <p className="font-medium text-green-900 dark:text-green-100">Replicate M005 Success</p>
                 <p className="text-sm text-green-700 dark:text-green-300">

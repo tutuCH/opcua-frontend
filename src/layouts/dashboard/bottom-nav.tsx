@@ -2,11 +2,11 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "src/components/ui/button";
 import { cn } from "@/lib/utils";
-import navConfig from "./config-navigation";
+import { useNavConfig } from "./config-navigation";
 
-// Wrapped in React.memo to avoid unnecessary re-renders on mobile.
-export const BottomNav = React.memo(() => {
+export const BottomNav = () => {
   const { pathname } = useLocation();
+  const navConfig = useNavConfig();
 
   return (
     <div className="fixed bottom-0 left-0 right-0 border-t bg-background dark:bg-slate-950 z-50">
@@ -30,6 +30,6 @@ export const BottomNav = React.memo(() => {
       </nav>
     </div>
   );
-});
+};
 
 BottomNav.displayName = "BottomNav";

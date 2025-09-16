@@ -1,13 +1,13 @@
-const warningsList = ['警告', '注意', '警示', '危險'];
+const warningsList = ['warning', 'attention', 'alert', 'danger'];
 const descriptionsList = [
-  '溫度過高',
-  '壓力過低',
-  '操作異常',
-  '系統不穩',
-  '維護需求',
-  '能耗異常',
-  '電壓波動',
-  '設備故障',
+  'temperatureHigh',
+  'pressureLow',
+  'operationAbnormal',
+  'systemUnstable',
+  'maintenanceRequired',
+  'energyAbnormal',
+  'voltageFluctuation',
+  'equipmentFailure',
 ];
 const severityList = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
 
