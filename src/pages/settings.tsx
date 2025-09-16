@@ -1,5 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 
 import { Card } from 'src/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from 'src/components/ui/tabs';
@@ -8,17 +9,18 @@ import PersonalInfoSection from '../sections/settings/personal-info-section';
 import SubscriptionSection from '../sections/settings/subscription-section';
 
 const SettingsPage: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <>
       <Helmet>
-        <title>設定 | OPC UA Dashboard</title>
+        <title>{t('pages.settings')} | OPC UA Dashboard</title>
       </Helmet>
 
       <div className="container max-w-6xl mx-auto p-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">設定</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
           <p className="text-muted-foreground mt-2">
-            管理您的帳戶設定和應用程式偏好
+            {t('settings.description')}
           </p>
         </div>
 
@@ -27,10 +29,10 @@ const SettingsPage: React.FC = () => {
             <div className="border-b px-6 py-3">
               <TabsList className="grid w-full max-w-md grid-cols-2">
                 <TabsTrigger value="personal" className="flex items-center gap-2">
-                  個人資訊
+                  {t('settings.tabs.personal')}
                 </TabsTrigger>
                 <TabsTrigger value="subscription" className="flex items-center gap-2">
-                  訂閱管理
+                  {t('settings.tabs.subscription')}
                 </TabsTrigger>
               </TabsList>
             </div>

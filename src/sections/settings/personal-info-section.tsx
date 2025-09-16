@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { cn } from 'src/lib/utils';
 
 import {
@@ -51,13 +52,19 @@ interface ActionMessage {
 }
 
 const PersonalInfoSection: React.FC = () => {
+  const { t, i18n, ready } = useTranslation();
   const { user, refreshUserData, logout } = useAuth();
+
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMessage, setUpdateMessage] = useState<ActionMessage | null>(null);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState('zh-TW');
+
+  // Don't render until i18n is ready
+  if (!ready) {
+    return <div>Loading translations...</div>;
+  }
 
   const {
     register: registerProfile,
@@ -97,10 +104,10 @@ const PersonalInfoSection: React.FC = () => {
     try {
       await subscriptionApi.updateUserProfile(data);
       await refreshUserData();
-      setUpdateMessage({ type: 'success', text: '個人資訊已成功更新' });
+      setUpdateMessage({ type: 'success', text: t('personalSettings.personalInfo.updateSuccess') });
     } catch (error) {
       console.error('Failed to update profile:', error);
-      setUpdateMessage({ type: 'error', text: '更新失敗，請稍後再試' });
+      setUpdateMessage({ type: 'error', text: t('personalSettings.personalInfo.updateError') });
     } finally {
       setIsUpdating(false);
     }
@@ -115,12 +122,12 @@ const PersonalInfoSection: React.FC = () => {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,
       });
-      setUpdateMessage({ type: 'success', text: '密碼已成功更改' });
+      setUpdateMessage({ type: 'success', text: t('personalSettings.passwordDialog.changeSuccess') });
       setPasswordDialogOpen(false);
       resetPassword();
     } catch (error) {
       console.error('Failed to change password:', error);
-      setUpdateMessage({ type: 'error', text: '密碼更改失敗，請檢查當前密碼是否正確' });
+      setUpdateMessage({ type: 'error', text: t('personalSettings.passwordDialog.changeError') });
     } finally {
       setIsChangingPassword(false);
     }
@@ -136,29 +143,41 @@ const PersonalInfoSection: React.FC = () => {
   };
 
   const handleLanguageToggle = (): void => {
-    // Dummy implementation - toggle between languages
-    setCurrentLanguage(prev => prev === 'zh-TW' ? 'en-US' : 'zh-TW');
+    const supportedLanguages = ['zh-TW', 'zh-CN', 'en'];
+    const currentIndex = supportedLanguages.indexOf(i18n.language);
+    const nextIndex = (currentIndex + 1) % supportedLanguages.length;
+    const nextLanguage = supportedLanguages[nextIndex];
+    
+    i18n.changeLanguage(nextLanguage);
+    
+    const languageNames = {
+      'zh-TW': t('personalSettings.appSettings.language.traditionalChinese'),
+      'zh-CN': t('personalSettings.appSettings.language.simplifiedChinese'),
+      'en': t('personalSettings.appSettings.language.english')
+    };
+    
     setUpdateMessage({ 
       type: 'success', 
-      text: `語言已切換至 ${currentLanguage === 'zh-TW' ? 'English' : '繁體中文'}` 
+      text: `${t('personalSettings.appSettings.language.current')}: ${languageNames[nextLanguage as keyof typeof languageNames]}` 
     });
   };
 
   const handleThemeToggle = (): void => {
     // Dummy implementation - toggle theme
     setIsDarkMode(prev => !prev);
+    const newTheme = isDarkMode ? t('personalSettings.appSettings.theme.lightMode') : t('personalSettings.appSettings.theme.darkMode');
     setUpdateMessage({ 
       type: 'success', 
-      text: `已切換至${isDarkMode ? '淺色' : '深色'}模式` 
+      text: `${t('personalSettings.appSettings.theme.current')}: ${newTheme}` 
     });
   };
 
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight">個人設定</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">{t('personalSettings.title')}</h2>
         <p className="text-muted-foreground">
-          管理您的帳戶資訊和偏好設定
+          {t('personalSettings.description')}
         </p>
       </div>
 
@@ -175,21 +194,21 @@ const PersonalInfoSection: React.FC = () => {
       {/* Personal Information */}
       <Card>
         <CardHeader>
-          <CardTitle>個人資訊</CardTitle>
+          <CardTitle>{t('personalSettings.personalInfo.title')}</CardTitle>
           <CardDescription>
-            更新您的帳戶基本資訊
+            {t('personalSettings.personalInfo.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmitProfile(onSubmitProfile)} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="username">用戶名</Label>
+                <Label htmlFor="username">{t('personalSettings.personalInfo.username')}</Label>
                 <Input
                   id="username"
                   {...registerProfile('username', {
-                    required: '用戶名為必填項',
-                    minLength: { value: 2, message: '用戶名至少需要2個字符' },
+                    required: t('personalSettings.personalInfo.usernameRequired'),
+                    minLength: { value: 2, message: t('personalSettings.personalInfo.usernameMinLength') },
                   })}
                   className={cn(
                     profileErrors.username && "border-destructive focus-visible:ring-destructive"
@@ -203,15 +222,15 @@ const PersonalInfoSection: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">電子郵件</Label>
+                <Label htmlFor="email">{t('personalSettings.personalInfo.email')}</Label>
                 <Input
                   id="email"
                   type="email"
                   {...registerProfile('email', {
-                    required: '電子郵件為必填項',
+                    required: t('personalSettings.personalInfo.emailRequired'),
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: '請輸入有效的電子郵件地址',
+                      message: t('personalSettings.personalInfo.emailInvalid'),
                     },
                   })}
                   className={cn(
@@ -237,7 +256,7 @@ const PersonalInfoSection: React.FC = () => {
                 ) : (
                   <Save className="h-4 w-4" />
                 )}
-                {isUpdating ? '更新中...' : '保存更改'}
+                {isUpdating ? t('personalSettings.personalInfo.updating') : t('personalSettings.personalInfo.saveChanges')}
               </Button>
 
               <Button
@@ -247,7 +266,7 @@ const PersonalInfoSection: React.FC = () => {
                 className="flex items-center gap-2"
               >
                 <Key className="h-4 w-4" />
-                更改密碼
+                {t('personalSettings.personalInfo.changePassword')}
               </Button>
             </div>
           </form>
@@ -257,17 +276,21 @@ const PersonalInfoSection: React.FC = () => {
       {/* Application Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>應用程式設定</CardTitle>
+          <CardTitle>{t('personalSettings.appSettings.title')}</CardTitle>
           <CardDescription>
-            自訂您的應用程式體驗
+            {t('personalSettings.appSettings.description')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-medium">語言設定</h4>
+              <h4 className="text-sm font-medium">{t('personalSettings.appSettings.language.title')}</h4>
               <p className="text-sm text-muted-foreground">
-                當前語言: {currentLanguage === 'zh-TW' ? '繁體中文' : 'English'}
+                {t('personalSettings.appSettings.language.current')}: {
+                  i18n.language === 'zh-TW' ? t('personalSettings.appSettings.language.traditionalChinese') :
+                  i18n.language === 'zh-CN' ? t('personalSettings.appSettings.language.simplifiedChinese') :
+                  t('personalSettings.appSettings.language.english')
+                }
               </p>
             </div>
             <Button
@@ -276,15 +299,15 @@ const PersonalInfoSection: React.FC = () => {
               className="flex items-center gap-2"
             >
               <Languages className="h-4 w-4" />
-              切換語言
+              {t('personalSettings.appSettings.language.switch')}
             </Button>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-sm font-medium">主題設定</h4>
+              <h4 className="text-sm font-medium">{t('personalSettings.appSettings.theme.title')}</h4>
               <p className="text-sm text-muted-foreground">
-                當前主題: {isDarkMode ? '深色模式' : '淺色模式'}
+                {t('personalSettings.appSettings.theme.current')}: {isDarkMode ? t('personalSettings.appSettings.theme.darkMode') : t('personalSettings.appSettings.theme.lightMode')}
               </p>
             </div>
             <Button
@@ -297,15 +320,15 @@ const PersonalInfoSection: React.FC = () => {
               ) : (
                 <Moon className="h-4 w-4" />
               )}
-              {isDarkMode ? '淺色模式' : '深色模式'}
+              {isDarkMode ? t('personalSettings.appSettings.theme.switchToLight') : t('personalSettings.appSettings.theme.switchToDark')}
             </Button>
           </div>
 
           <div className="flex items-center justify-between pt-4 border-t">
             <div>
-              <h4 className="text-sm font-medium">登出帳戶</h4>
+              <h4 className="text-sm font-medium">{t('personalSettings.appSettings.logout.title')}</h4>
               <p className="text-sm text-muted-foreground">
-                結束當前會話並返回登錄頁面
+                {t('personalSettings.appSettings.logout.description')}
               </p>
             </div>
             <Button
@@ -314,7 +337,7 @@ const PersonalInfoSection: React.FC = () => {
               className="flex items-center gap-2 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
             >
               <LogOut className="h-4 w-4" />
-              登出
+              {t('personalSettings.appSettings.logout.button')}
             </Button>
           </div>
         </CardContent>
@@ -324,20 +347,20 @@ const PersonalInfoSection: React.FC = () => {
       <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>更改密碼</DialogTitle>
+            <DialogTitle>{t('personalSettings.passwordDialog.title')}</DialogTitle>
             <DialogDescription>
-              請輸入您的當前密碼和新密碼
+              {t('personalSettings.passwordDialog.description')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmitPassword(onSubmitPassword)}>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="currentPassword">當前密碼</Label>
+                <Label htmlFor="currentPassword">{t('personalSettings.passwordDialog.currentPassword')}</Label>
                 <Input
                   id="currentPassword"
                   type="password"
                   {...registerPassword('currentPassword', {
-                    required: '請輸入當前密碼',
+                    required: t('personalSettings.passwordDialog.currentPasswordRequired'),
                   })}
                   className={cn(
                     passwordErrors.currentPassword && "border-destructive focus-visible:ring-destructive"
@@ -351,13 +374,13 @@ const PersonalInfoSection: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="newPassword">新密碼</Label>
+                <Label htmlFor="newPassword">{t('personalSettings.passwordDialog.newPassword')}</Label>
                 <Input
                   id="newPassword"
                   type="password"
                   {...registerPassword('newPassword', {
-                    required: '請輸入新密碼',
-                    minLength: { value: 8, message: '密碼至少需要8個字符' },
+                    required: t('personalSettings.passwordDialog.newPasswordRequired'),
+                    minLength: { value: 8, message: t('personalSettings.passwordDialog.passwordMinLength') },
                   })}
                   className={cn(
                     passwordErrors.newPassword && "border-destructive focus-visible:ring-destructive"
@@ -371,13 +394,13 @@ const PersonalInfoSection: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">確認新密碼</Label>
+                <Label htmlFor="confirmPassword">{t('personalSettings.passwordDialog.confirmPassword')}</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   {...registerPassword('confirmPassword', {
-                    required: '請確認新密碼',
-                    validate: (value) => value === watchNewPassword || '密碼不匹配',
+                    required: t('personalSettings.passwordDialog.confirmPasswordRequired'),
+                    validate: (value) => value === watchNewPassword || t('personalSettings.passwordDialog.passwordMismatch'),
                   })}
                   className={cn(
                     passwordErrors.confirmPassword && "border-destructive focus-visible:ring-destructive"
@@ -396,7 +419,7 @@ const PersonalInfoSection: React.FC = () => {
                 variant="outline" 
                 onClick={handlePasswordDialogClose}
               >
-                取消
+                {t('personalSettings.passwordDialog.cancel')}
               </Button>
               <Button
                 type="submit"
@@ -405,10 +428,10 @@ const PersonalInfoSection: React.FC = () => {
                 {isChangingPassword ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    更改中...
+                    {t('personalSettings.passwordDialog.changing')}
                   </>
                 ) : (
-                  '更改密碼'
+                  t('personalSettings.passwordDialog.change')
                 )}
               </Button>
             </DialogFooter>

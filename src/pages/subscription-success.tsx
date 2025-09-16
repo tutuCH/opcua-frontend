@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Typography,
@@ -18,6 +19,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSubscription } from '../hooks/useSubscription';
 
 export default function SubscriptionSuccess() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isVerifying, setIsVerifying] = useState(true);
@@ -32,7 +34,7 @@ export default function SubscriptionSuccess() {
     const verifyAndRefreshSubscription = async () => {
       if (!sessionId) {
         setIsVerifying(false);
-        setVerificationError('無效的會話ID');
+        setVerificationError(t('subscription.invalidSession'));
         return;
       }
 
@@ -56,7 +58,7 @@ export default function SubscriptionSuccess() {
           }, delay);
         } else {
           setIsVerifying(false);
-          setVerificationError('無法驗證訂閱狀態，請手動重新整理或聯繫客服');
+          setVerificationError(t('subscription.verificationError'));
         }
       }
     };
@@ -90,10 +92,10 @@ export default function SubscriptionSuccess() {
       >
         <CircularProgress size={60} color="primary" />
         <Typography variant="h6" color="text.secondary" mt={3}>
-          驗證付款中...
+          {t('subscription.success.verifying')}
         </Typography>
         <Typography variant="body2" color="text.secondary" mt={1}>
-          請稍候，我們正在確認您的訂閱狀態{retryCount > 0 && ` (重試 ${retryCount}/3)`}
+          {t('subscription.success.verifyingDescription')}{retryCount > 0 && ` (重試 ${retryCount}/3)`}
         </Typography>
       </Box>
     );
@@ -115,10 +117,10 @@ export default function SubscriptionSuccess() {
               {verificationError}
             </Alert>
             <Typography variant="h5" gutterBottom>
-              驗證失敗
+              {t('subscription.success.verificationFailed')}
             </Typography>
             <Typography variant="body1" color="text.secondary" mb={3}>
-              無法驗證您的付款狀態，請稍後再試或聯繫客服
+              {t('subscription.success.verificationFailedDescription')}
             </Typography>
             <Box display="flex" gap={2} justifyContent="center">
               <Button
@@ -126,14 +128,14 @@ export default function SubscriptionSuccess() {
                 onClick={handleManualRefresh}
                 startIcon={<RefreshIcon />}
               >
-                重新驗證
+                {t('subscription.success.retryVerification')}
               </Button>
               <Button
                 variant="outlined"
                 onClick={handleReturnToSettings}
                 startIcon={<ArrowBackIcon />}
               >
-                返回設置
+                {t('subscription.success.backToSettings')}
               </Button>
             </Box>
           </CardContent>
@@ -161,19 +163,19 @@ export default function SubscriptionSuccess() {
             }} 
           />
           <Typography variant="h4" gutterBottom color="success.main">
-            訂閱成功！
+            {t('subscription.success.title')}
           </Typography>
           <Typography variant="h6" gutterBottom>
-            歡迎加入我們的專業服務
+            {t('subscription.success.welcome')}
           </Typography>
           <Typography variant="body1" color="text.secondary" mb={3}>
-            您的訂閱已經激活，現在可以享受所有專業功能。您將收到一封確認郵件，其中包含訂閱詳情。
+            {t('subscription.success.description')}
           </Typography>
           
           {sessionId && (
             <Alert severity="info" sx={{ mb: 3, textAlign: 'left' }}>
               <Typography variant="body2">
-                訂閱ID: {sessionId}
+                {t('subscription.success.subscriptionId')}: {sessionId}
               </Typography>
             </Alert>
           )}
@@ -184,14 +186,14 @@ export default function SubscriptionSuccess() {
               size="large"
               onClick={handleGoToDashboard}
             >
-              開始使用
+              {t('subscription.success.startUsing')}
             </Button>
             <Button
               variant="outlined"
               onClick={handleReturnToSettings}
               startIcon={<ArrowBackIcon />}
             >
-              管理訂閱
+              {t('subscription.success.manageSubscription')}
             </Button>
           </Box>
         </CardContent>

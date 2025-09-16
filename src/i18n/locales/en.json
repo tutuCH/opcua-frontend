@@ -1,0 +1,63 @@
+{
+  "personalSettings": {
+    "title": "Personal Settings",
+    "description": "Manage your account information and preferences",
+    "personalInfo": {
+      "title": "Personal Information",
+      "description": "Update your basic account information",
+      "username": "Username",
+      "email": "Email",
+      "usernameRequired": "Username is required",
+      "usernameMinLength": "Username must be at least 2 characters",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email address",
+      "saveChanges": "Save Changes",
+      "updating": "Updating...",
+      "changePassword": "Change Password",
+      "updateSuccess": "Personal information updated successfully",
+      "updateError": "Update failed, please try again later"
+    },
+    "appSettings": {
+      "title": "Application Settings",
+      "description": "Customize your application experience",
+      "language": {
+        "title": "Language Settings",
+        "current": "Current language",
+        "switch": "Switch Language",
+        "traditionalChinese": "繁體中文",
+        "simplifiedChinese": "简体中文",
+        "english": "English"
+      },
+      "theme": {
+        "title": "Theme Settings",
+        "current": "Current theme",
+        "lightMode": "Light Mode",
+        "darkMode": "Dark Mode",
+        "switchToLight": "Light Mode",
+        "switchToDark": "Dark Mode"
+      },
+      "logout": {
+        "title": "Logout Account",
+        "description": "End current session and return to login page",
+        "button": "Logout"
+      }
+    },
+    "passwordDialog": {
+      "title": "Change Password",
+      "description": "Please enter your current password and new password",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm New Password",
+      "currentPasswordRequired": "Please enter your current password",
+      "newPasswordRequired": "Please enter new password",
+      "passwordMinLength": "Password must be at least 8 characters",
+      "confirmPasswordRequired": "Please confirm new password",
+      "passwordMismatch": "Passwords do not match",
+      "cancel": "Cancel",
+      "change": "Change Password",
+      "changing": "Changing...",
+      "changeSuccess": "Password changed successfully",
+      "changeError": "Password change failed, please check if current password is correct"
+    }
+  }
+}

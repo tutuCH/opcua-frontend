@@ -1,10 +1,4 @@
 import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   Search, 
   QrCode, 
@@ -15,6 +9,12 @@ import {
   ClipboardCheck,
   Truck
 } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const mockMaterials = [
   {
@@ -402,7 +402,7 @@ export function TraceabilityView() {
                   <p className="text-xs text-muted-foreground">PP-H350</p>
                 </div>
                 
-                <div className="w-8 h-0.5 bg-muted-foreground"></div>
+                <div className="w-8 h-0.5 bg-muted-foreground" />
                 
                 <div className="text-center">
                   <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white font-medium">
@@ -412,7 +412,7 @@ export function TraceabilityView() {
                   <p className="text-xs text-muted-foreground">2,400 pcs</p>
                 </div>
                 
-                <div className="w-8 h-0.5 bg-muted-foreground"></div>
+                <div className="w-8 h-0.5 bg-muted-foreground" />
                 
                 <div className="text-center">
                   <div className="w-12 h-12 bg-amber-600 rounded-full flex items-center justify-center text-white font-medium">
@@ -422,7 +422,7 @@ export function TraceabilityView() {
                   <p className="text-xs text-muted-foreground">1.0% defect</p>
                 </div>
                 
-                <div className="w-8 h-0.5 bg-muted-foreground"></div>
+                <div className="w-8 h-0.5 bg-muted-foreground" />
                 
                 <div className="text-center">
                   <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center text-white font-medium">
@@ -432,7 +432,7 @@ export function TraceabilityView() {
                   <p className="text-xs text-muted-foreground">2,376 units</p>
                 </div>
                 
-                <div className="w-8 h-0.5 bg-muted-foreground"></div>
+                <div className="w-8 h-0.5 bg-muted-foreground" />
                 
                 <div className="text-center">
                   <div className="w-12 h-12 bg-teal-600 rounded-full flex items-center justify-center text-white font-medium">

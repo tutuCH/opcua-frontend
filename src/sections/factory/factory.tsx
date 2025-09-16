@@ -6,15 +6,20 @@ import {
 } from 'src/api/machinesServices';
 import { DndProvider, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { 
-  Factory as FactoryIcon, 
+import {
+  Factory as FactoryIcon,
   Cog,
   Plus,
-  Trash2, 
+  Trash2,
   Edit,
-  RefreshCw, 
-  Info, 
+  RefreshCw,
+  Info,
+  Wifi,
+  WifiOff,
+  AlertCircle,
+  Activity
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from 'src/components/ui/button';
 import { Card } from 'src/components/ui/card';
 import { ScrollArea, ScrollBar } from 'src/components/ui/scroll-area';
@@ -27,12 +32,16 @@ import {
 } from 'src/components/ui/select';
 import { useParams } from 'react-router-dom';
 import { Badge } from 'src/components/ui/badge';
+import { Alert, AlertDescription } from 'src/components/ui/alert';
 import LoadingSkeleton from '@/components/loadingSkeleton/loadingSkeleton';
+import { useWebSocketContext } from '@/contexts/WebSocketContext';
+import { WebSocketEventData, isRealtimeData } from '@/services/websocketService';
 import MachineStatusCard from './machine-status-card';
 import MachineDialog from './machine-dialog';
 import FactoryDialog from './factory-dialog';
 
 export default function Factory() {
+  const { t } = useTranslation();
   const [factories, setFactories] = useState([]);
   const [selectedAddMachineIndex, setSelectedAddMachineIndex] = useState(null);
   const [selectedFactoryIndex, setSelectedFactoryIndex] = useState(-1);
@@ -41,6 +50,95 @@ export default function Factory() {
   const [isEdit, setIsEdit] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const userId = localStorage.getItem('user_id');
+
+  // WebSocket state for factory-level monitoring
+  const [realtimeData, setRealtimeData] = useState(new Map());
+  const [spcData, setSpcData] = useState(new Map());
+  const [realtimeCount, setRealtimeCount] = useState(0);
+  const [spcCount, setSpcCount] = useState(0);
+  const [lastRealtime, setLastRealtime] = useState(null);
+  const [lastSpc, setLastSpc] = useState(null);
+  const [subscribedMachines, setSubscribedMachines] = useState(new Set());
+
+  // Central WebSocket connection for factory page
+  const {
+    isConnected,
+    isConnecting,
+    error,
+    subscribeToMachine,
+    unsubscribeFromMachine,
+    requestMachineStatus,
+    subscribedMachines: wsSubscribedMachines,
+    realtimeData: contextRealtimeData,
+    spcData: contextSpcData,
+    statusData: contextStatusData,
+    alerts: contextAlerts,
+    realtimeUpdateCount,
+    spcUpdateCount,
+    statusUpdateCount,
+    alertUpdateCount
+  } = useWebSocketContext();
+
+  // Update local state when context data changes
+  useEffect(() => {
+    setRealtimeData(contextRealtimeData);
+    if (contextRealtimeData.size > 0) {
+      const latestRealtime = Array.from(contextRealtimeData.values()).pop();
+      if (latestRealtime) {
+        setLastRealtime(latestRealtime);
+        console.log('🏭 FACTORY REALTIME:', {
+          deviceId: latestRealtime.deviceId,
+          timestamp: latestRealtime.timestamp,
+          data: latestRealtime.data,
+          dataStructure: latestRealtime.data ? Object.keys(latestRealtime.data) : 'no data'
+        });
+      }
+    }
+    setRealtimeCount(realtimeUpdateCount);
+  }, [contextRealtimeData, realtimeUpdateCount]);
+
+  useEffect(() => {
+    setSpcData(contextSpcData);
+    if (contextSpcData.size > 0) {
+      const latestSpc = Array.from(contextSpcData.values()).pop();
+      if (latestSpc) {
+        setLastSpc(latestSpc);
+        console.log('🏭 FACTORY SPC:', {
+          deviceId: latestSpc.deviceId,
+          timestamp: latestSpc.timestamp,
+          data: latestSpc.data,
+          dataStructure: latestSpc.data ? Object.keys(latestSpc.data) : 'no data'
+        });
+      }
+    }
+    setSpcCount(spcUpdateCount);
+  }, [contextSpcData, spcUpdateCount]);
+
+  useEffect(() => {
+    if (contextStatusData.size > 0) {
+      const latestStatus = Array.from(contextStatusData.values()).pop();
+      if (latestStatus) {
+        console.log('🏭 FACTORY STATUS:', {
+          deviceId: latestStatus.deviceId,
+          timestamp: latestStatus.timestamp,
+          data: latestStatus.data,
+          source: latestStatus.source
+        });
+      }
+    }
+  }, [contextStatusData, statusUpdateCount]);
+
+  useEffect(() => {
+    if (contextAlerts.length > 0) {
+      const latestAlert = contextAlerts[0];
+      console.warn('🏭 FACTORY ALERT:', {
+        deviceId: latestAlert.deviceId,
+        alert: latestAlert.alert,
+        timestamp: latestAlert.timestamp
+      });
+    }
+  }, [contextAlerts, alertUpdateCount]);
+
   const ItemTypes = {
     MACHINE: 'machine',
   };
@@ -66,6 +164,37 @@ export default function Factory() {
 
     getFactoriesMachines();
   }, [userId, factoryId]);
+
+  // Device ID mapping function - convert machineId to backend format
+  const getDeviceId = (machine) => {
+    // Based on websocket-test.html working with "postgres machine 1"
+    // Try the exact format that works in the test
+    const deviceId = `postgres machine ${machine.machineId}`;
+    console.log(`🔧 Device ID mapping: machineId ${machine.machineId} -> deviceId "${deviceId}"`);
+    return deviceId;
+  };
+
+  // Subscribe to all machines when connected and list is loaded
+  useEffect(() => {
+    if (isConnected && factories.length) {
+      console.log('🔌 WebSocket connected, subscribing to machines...');
+      const newSubscriptions = new Set();
+
+      factories.forEach(factory => {
+        factory.machines?.forEach(machine => {
+          const deviceId = getDeviceId(machine);
+          console.log(`📡 Subscribing to machine: ${deviceId} (machineId: ${machine.machineId})`);
+          subscribeToMachine(deviceId);
+          requestMachineStatus(deviceId);
+          newSubscriptions.add(deviceId);
+        });
+      });
+
+      setSubscribedMachines(newSubscriptions);
+    } else if (!isConnected) {
+      setSubscribedMachines(new Set());
+    }
+  }, [isConnected, factories, subscribeToMachine, requestMachineStatus]);
 
   const handleAddMachine = (factoryIndex, index) => {
     setMachineDialogState(machineDialogState.map((open, i) => (i === factoryIndex ? true : open)));
@@ -175,6 +304,109 @@ export default function Factory() {
     setFactoryDialogState(factoryDialogState.map((open, i) => (i === index ? true : open)));
   };
 
+  // Factory WebSocket Debug Panel Component
+  const FactoryWebSocketStatus = () => (
+    <div className="mb-4 space-y-3">
+      {/* Connection Status */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {isConnecting ? (
+            <Badge variant="secondary">
+              <div className="animate-spin h-3 w-3 border border-current border-t-transparent rounded-full mr-1" />
+              Connecting...
+            </Badge>
+          ) : isConnected ? (
+            <Badge variant="default" className="bg-green-500">
+              <Wifi className="h-3 w-3 mr-1" />
+              Connected ({wsSubscribedMachines.length} subscriptions)
+            </Badge>
+          ) : (
+            <Badge variant="destructive">
+              <WifiOff className="h-3 w-3 mr-1" />
+              Disconnected
+            </Badge>
+          )}
+        </div>
+
+        {/* Event Counters */}
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-1">
+            <Activity className="h-3 w-3 text-green-600" />
+            <span>Realtime: {realtimeCount}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Activity className="h-3 w-3 text-blue-600" />
+            <span>SPC: {spcCount}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Error Alert */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            WebSocket Error: {error}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Debug Information */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 text-xs">
+        {/* Last Realtime Event */}
+        {lastRealtime && (
+          <div className="p-2 bg-green-50 rounded border">
+            <div className="font-medium text-green-800 mb-1">
+              🔄 Last Realtime (Device {lastRealtime.deviceId})
+            </div>
+            {isRealtimeData(lastRealtime.data) ? (
+              <div className="text-green-700">
+                STS: {lastRealtime.data.Data?.STS} | T1: {lastRealtime.data.Data?.T1}°C | OT: {lastRealtime.data.Data?.OT}°C
+              </div>
+            ) : (
+              <div className="text-green-700">
+                Data: {JSON.stringify(lastRealtime.data).substring(0, 50)}...
+              </div>
+            )}
+            <div className="text-green-600 text-[10px] mt-1">
+              {lastRealtime.timestamp && new Date(lastRealtime.timestamp).toLocaleTimeString()}
+            </div>
+          </div>
+        )}
+
+        {/* Last SPC Event */}
+        {lastSpc && (
+          <div className="p-2 bg-blue-50 rounded border">
+            <div className="font-medium text-blue-800 mb-1">
+              📊 Last SPC (Device {lastSpc.deviceId})
+            </div>
+            <div className="text-blue-700">
+              CYCN: {(lastSpc.data as any)?.Data?.CYCN} | ECYCT: {(lastSpc.data as any)?.Data?.ECYCT}s
+            </div>
+            <div className="text-blue-600 text-[10px] mt-1">
+              {lastSpc.timestamp && new Date(lastSpc.timestamp).toLocaleTimeString()}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Machine Subscription Status */}
+      <div className="p-2 bg-gray-50 rounded border text-xs">
+        <div className="font-medium text-gray-800 mb-1">
+          🏭 Factory Machines ({subscribedMachines.size} subscribed)
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1">
+          {Array.from(subscribedMachines).map(deviceId => (
+            <div key={deviceId} className="flex items-center gap-1 text-gray-600">
+              <div className={`h-2 w-2 rounded-full ${realtimeData.has(deviceId) ? 'bg-green-400' : 'bg-gray-300'}`} />
+              <span className="truncate">{deviceId}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   const FactoryScrollArea = ({ factory, factoryIndex }) => {
     // Calculate grid dimensions
     const gridWidth = factory.factoryWidth;
@@ -200,7 +432,7 @@ export default function Factory() {
                     {gridWidth}×{gridHeight}
                   </Badge>
                   <span>•</span>
-                  <span>{factory.machines?.length || 0} machines</span>
+                  <span>{factory.machines?.length || 0} {t('factoryView.machines')}</span>
                 </div>
               </div>
             </div>
@@ -214,7 +446,7 @@ export default function Factory() {
                   className="flex items-center gap-1 bg-red-500/80 hover:bg-red-600"
                 >
                   <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">刪除廠區</span>
+                  <span className="hidden sm:inline">{t('factoryView.deleteFactory')}</span>
                 </Button>
               )}
             </div>
@@ -228,19 +460,19 @@ export default function Factory() {
             <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm">
               <div className="flex items-center gap-1">
                 <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-green-400 ring-2 ring-green-200" />
-                <span>Online</span>
+                <span>{t('factoryView.online')}</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-gray-400 ring-2 ring-gray-200" />
-                <span>Offline</span>
+                <span>{t('factoryView.offline')}</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-amber-400 ring-2 ring-amber-200" />
-                <span>Warning</span>
+                <span>{t('factoryView.warning')}</span>
               </div>
               <div className="flex items-center gap-1">
                 <div className="h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full bg-red-400 ring-2 ring-red-200" />
-                <span>Error</span>
+                <span>{t('factoryView.error')}</span>
               </div>
             </div>
             
@@ -248,13 +480,13 @@ export default function Factory() {
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs sm:text-sm h-8 px-2 sm:px-3">
                 <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Refresh</span>
+                <span className="hidden sm:inline">{t('factoryView.refresh')}</span>
               </Button>
               <Button variant="outline" size="sm" className="flex items-center gap-1 text-xs sm:text-sm h-8 px-2 sm:px-3"
                 onClick={() => handleEditFactory(factoryIndex)}
               >
                 <Cog className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">設定</span>
+                <span className="hidden sm:inline">{t('factoryView.settings')}</span>
               </Button>
             </div>
           </div>
@@ -314,10 +546,6 @@ export default function Factory() {
                           (machine) => machine.machineIndex === index
                         );
                         
-                        // Determine machine status (in a real app, this would come from your data)
-                        const machineStatus = matchingMachine ? 
-                          (Math.random() > 0.7 ? 'warning' : Math.random() > 0.9 ? 'error' : 'online') : null;
-                        
                         return (
                           <div key={index} className="relative aspect-square">
                             {matchingMachine ? (
@@ -330,7 +558,9 @@ export default function Factory() {
                                   machine={matchingMachine}
                                   setFactories={setFactories}
                                   factoryIndex={factoryIndex}
-                                  status={machineStatus}
+                                  realtimeData={realtimeData.get(getDeviceId(matchingMachine))}
+                                  isConnected={isConnected}
+                                  deviceId={getDeviceId(matchingMachine)}
                                 />
                               </div>
                             ) : (
@@ -376,7 +606,7 @@ export default function Factory() {
           
           <div className="mt-3 sm:mt-4 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-slate-500">
             <Info className="h-3 w-3 sm:h-4 sm:w-4" />
-            <p>Drag machines to rearrange them on the factory floor. Click empty spaces to add new machines.</p>
+            <p>{t('factoryView.dragInstruction')}</p>
           </div>
         </div>
       </Card>
@@ -390,13 +620,13 @@ export default function Factory() {
             <SelectValue
               placeholder={
                 selectedFactoryIndex === -1
-                  ? '全部廠區'
+                  ? t('factory.allFactories')
                   : factories[selectedFactoryIndex].factoryName
               }
             />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="-1">全部廠區</SelectItem>
+            <SelectItem value="-1">{t('factory.allFactories')}</SelectItem>
             {factories.map((factory, index) => (
               <SelectItem key={index} value={index.toString()}>
                 {factory.factoryName}
@@ -428,6 +658,9 @@ export default function Factory() {
       ) : (
         <DndProvider backend={HTML5Backend}>
           <div className="w-full">
+            {/* WebSocket Status and Debug Panel */}
+            <FactoryWebSocketStatus />
+
             <SelectFactoryComponent />
 
             {selectedFactoryIndex === -1
@@ -468,7 +701,7 @@ export default function Factory() {
               <div className="">
                 <Button className="w-full" onClick={handleAddFactory}>
                   <Plus className="mr-2 h-4 w-4" />
-                  新廠區
+                  {t('factory.addFactory')}
                 </Button>
               </div>
             )}

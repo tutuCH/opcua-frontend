@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
@@ -14,26 +15,32 @@ import { useRouter } from 'src/routes/hooks';
 
 // ----------------------------------------------------------------------
 
-const MENU_OPTIONS = [
-  // {
-  //   label: 'Home',
-  //   icon: 'eva:home-fill',
-  // },
-  // {
-  //   label: 'Profile',
-  //   icon: 'eva:person-fill',
-  // },
-  {
-    label: 'Settings',
-    icon: 'eva:settings-2-fill',
-  },
-];
+const useMenuOptions = () => {
+  const { t } = useTranslation();
+  
+  return [
+    // {
+    //   label: 'Home',
+    //   icon: 'eva:home-fill',
+    // },
+    // {
+    //   label: 'Profile',
+    //   icon: 'eva:person-fill',
+    // },
+    {
+      label: t('navigation.account.settings'),
+      icon: 'eva:settings-2-fill',
+    },
+  ];
+};
 
 // ----------------------------------------------------------------------
 
 export default function AccountPopover() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(null);
+  const menuOptions = useMenuOptions();
 
   const handleOpen = (event) => {
     setOpen(event.currentTarget);
@@ -57,7 +64,7 @@ export default function AccountPopover() {
       // case 'Profile':
       //   router.push('/profile');
       //   break;
-      case 'Settings':
+      case t('navigation.account.settings'):
         router.push('/settings');
         break;
       default:
@@ -125,7 +132,7 @@ export default function AccountPopover() {
 
         <Divider sx={{ borderStyle: 'dashed', my: 1 }} />
 
-        {MENU_OPTIONS.map((option) => (
+        {menuOptions.map((option) => (
           <MenuItem key={option.label} onClick={() => handleSelectPopover(option.label)}>
             {option.label}
           </MenuItem>
@@ -139,7 +146,7 @@ export default function AccountPopover() {
           onClick={handleLogout}
           sx={{ typography: 'body2', color: 'error.main', py: 1.5 }}
         >
-          Logout
+          {t('personalSettings.appSettings.logout.button')}
         </MenuItem>
       </Popover>
     </>

@@ -1,13 +1,15 @@
+import { useTranslation } from 'react-i18next';
 import Factory from '../factory.tsx';
 import PostSearch from '../post-search';
 
 // ----------------------------------------------------------------------
 
 export default function FactoryView() {
+  const { t } = useTranslation();
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-row items-center justify-between mb-10">
-        <h1 className="text-2xl font-bold tracking-tight">工廠</h1>
+        <h1 className="text-2xl font-bold tracking-tight">{t('pages.factory')}</h1>
       </div>
 
       {/* 

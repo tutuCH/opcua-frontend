@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createFactory, updateFactory } from 'src/api/machinesServices';
 import { Factory, Thermometer, Gauge, AlertTriangle, Copy, Clipboard, Check } from 'lucide-react';
 import type { 
@@ -81,6 +82,7 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
   setFactoryDialogState,
   setMachineDialogState
 }) => {
+  const { t } = useTranslation();
   const [factoryName, setFactoryName] = useState<string>('');
   const [width, setWidth] = useState<string>('');
   const [height, setHeight] = useState<string>('');
@@ -206,7 +208,7 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
       );
       
       if (lastMachineIndex >= parseInt(width, 10) * parseInt(height, 10)) {
-        alert('工廠大小不足以容納所有機台');
+        alert(t('factory.sizeError'));
         return;
       }
     }
@@ -338,57 +340,57 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Factory className="h-5 w-5 text-slate-600" />
-            {isEditMode ? "編輯工廠" : "新增工廠"}
+            {isEditMode ? t('factory.editTitle') : t('factory.title')}
           </DialogTitle>
           <DialogDescription>
             {isEditMode 
-              ? "編輯工廠資訊和設定警告條件" 
-              : "新增工廠並設定警告條件"}
+              ? t('factory.editDescription') 
+              : t('factory.description')}
           </DialogDescription>
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="factory">工廠資訊</TabsTrigger>
-            <TabsTrigger value="warnings">警告條件</TabsTrigger>
+            <TabsTrigger value="factory">{t('factory.info')}</TabsTrigger>
+            <TabsTrigger value="warnings">{t('factory.warnings')}</TabsTrigger>
           </TabsList>
           
           <TabsContent value="factory" className="space-y-4 py-4">
             <form id="factory-form" onSubmit={isEditMode ? handleUpdateFactory : handleCreateFactory}>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="factoryName">工廠名稱</Label>
+                  <Label htmlFor="factoryName">{t('factory.name')}</Label>
                   <Input
                     id="factoryName"
                     value={factoryName}
                     onChange={(e: InputChangeEvent) => setFactoryName(e.target.value)}
-                    placeholder="輸入工廠名稱"
+                    placeholder={t('factory.namePlaceholder')}
                     required
                   />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="factoryWidth">寬</Label>
+                    <Label htmlFor="factoryWidth">{t('factory.width')}</Label>
                     <Input
                       id="factoryWidth"
                       type="number"
                       min="1"
                       value={width}
                       onChange={(e: InputChangeEvent) => setWidth(e.target.value)}
-                      placeholder="工廠寬度"
+                      placeholder={t('factory.widthPlaceholder')}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="factoryHeight">長</Label>
+                    <Label htmlFor="factoryHeight">{t('factory.length')}</Label>
                     <Input
                       id="factoryHeight"
                       type="number"
                       min="1"
                       value={height}
                       onChange={(e: InputChangeEvent) => setHeight(e.target.value)}
-                      placeholder="工廠長度"
+                      placeholder={t('factory.lengthPlaceholder')}
                       required
                     />
                   </div>
@@ -400,17 +402,17 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
           <TabsContent value="warnings" className="py-4">
             {isEditMode && (
               <div className="mb-4">
-                <Label htmlFor="machine-select" className="mb-2 block">選擇機台</Label>
+                <Label htmlFor="machine-select" className="mb-2 block">{t('factory.selectMachine')}</Label>
                 <div className="flex gap-2">
                   <Select 
                     value={selectedMachine} 
                     onValueChange={setSelectedMachine}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="選擇機台" />
+                      <SelectValue placeholder={t('factory.selectMachinePlaceholder')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="factory">工廠預設設定</SelectItem>
+                      <SelectItem value="factory">{t('factory.defaultSettings')}</SelectItem>
                       {factories[factoryIndex]?.machines?.map(machine => {
                         const machineId = machine.machineId || machine.id;
                         return (
@@ -432,7 +434,7 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
                     onClick={handleCopySettings}
                   >
                     {copySuccess ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                    {copySuccess ? "已複製" : "複製設定"}
+                    {copySuccess ? t('factory.copied') : t('factory.copySettings')}
                   </Button>
                   
                   <Button 
@@ -444,7 +446,7 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
                     disabled={!copiedSettings}
                   >
                     {pasteSuccess ? <Check className="h-3 w-3" /> : <Clipboard className="h-3 w-3" />}
-                    {pasteSuccess ? "已貼上" : "貼上設定"}
+                    {pasteSuccess ? t('factory.pasted') : t('factory.pasteSettings')}
                   </Button>
                   
                   {selectedMachine !== 'factory' && (
@@ -455,7 +457,7 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
                       className="flex items-center gap-1"
                       onClick={handleApplyToAll}
                     >
-                      應用到所有機台
+                      {t('factory.applyToAll')}
                     </Button>
                   )}
                 </div>
@@ -463,7 +465,7 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
                 <div className="mt-3">
                   <Badge variant="outline" className="text-xs">
                     {selectedMachine === 'factory' 
-                      ? '工廠預設設定將應用於所有未配置的新機台' 
+                      ? t('factory.defaultSettings') 
                       : `正在配置: ${factories[factoryIndex]?.machines?.find(m => (m.machineId || m.id).toString() === selectedMachine)?.machineName}`}
                   </Badge>
                 </div>
@@ -676,10 +678,10 @@ const FactoryDialog: React.FC<FactoryDialogProps> = ({
         
         <DialogFooter className="pt-2">
           <Button variant="outline" type="button" onClick={handleClose}>
-            取消
+            {t('factory.cancel')}
           </Button>
           <Button type="submit" form="factory-form">
-            {isEditMode ? "更新" : "新增"}
+            {isEditMode ? t('factory.update') : t('factory.add')}
           </Button>
         </DialogFooter>
       </DialogContent>

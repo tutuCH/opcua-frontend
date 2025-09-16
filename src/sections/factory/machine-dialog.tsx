@@ -1,4 +1,5 @@
 import React, { useState, FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,7 @@ const MachineDialog: React.FC<MachineDialogProps> = ({
   setFactories,
   machineIndex,
 }) => {
+  const { t } = useTranslation();
   const [ipAddress, setIpAddress] = useState<string>('');
   const [machineName, setMachineName] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -138,19 +140,19 @@ const MachineDialog: React.FC<MachineDialogProps> = ({
     <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>新增機器</DialogTitle>
+          <DialogTitle>{t('machine.title')}</DialogTitle>
           <DialogDescription>
-            請輸入機器名稱和IP地址
+            {t('machine.description')}
           </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={submitConnection} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="machineName">機器名稱</Label>
+            <Label htmlFor="machineName">{t('machine.name')}</Label>
             <Input
               id="machineName"
               name="machineName"
-              placeholder="輸入機器名稱"
+              placeholder={t('machine.namePlaceholder')}
               value={machineName}
               onChange={(e) => setMachineName(e.target.value)}
               required
@@ -160,11 +162,11 @@ const MachineDialog: React.FC<MachineDialogProps> = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="ipAddress">IP地址</Label>
+            <Label htmlFor="ipAddress">{t('machine.ipAddress')}</Label>
             <Input
               id="ipAddress"
               name="ipAddress"
-              placeholder="例如: 192.168.1.100"
+              placeholder={t('machine.ipPlaceholder')}
               value={ipAddress}
               onChange={(e) => setIpAddress(e.target.value)}
               required
@@ -179,13 +181,13 @@ const MachineDialog: React.FC<MachineDialogProps> = ({
               onClick={handleDialogClose}
               disabled={isSubmitting}
             >
-              取消
+              {t('machine.cancel')}
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting || !ipAddress.trim() || !machineName.trim()}
             >
-              {isSubmitting ? '新增中...' : '新增機器'}
+              {isSubmitting ? t('machine.adding') : t('machine.add')}
             </Button>
           </DialogFooter>
         </form>
