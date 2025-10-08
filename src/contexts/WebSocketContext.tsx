@@ -5,6 +5,8 @@ import {
   WebSocketEventData,
   MachineAlert
 } from '@/services/websocketService';
+import { getTimeSeriesManager, TimeSeriesDataManager } from '@/services/timeSeriesService';
+import { TokenManager } from '@/utils/tokenSecurity';
 
 export interface WebSocketContextValue {
   // Connection state
@@ -42,6 +44,9 @@ export interface WebSocketContextValue {
   // Alert management
   clearAlerts: () => void;
   removeAlert: (index: number) => void;
+
+  // JWT Authentication (v2.0)
+  updateAuthToken: (token: string) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextValue | null>(null);
@@ -83,6 +88,7 @@ export function WebSocketProvider({ children, autoConnect = true }: WebSocketPro
   const [subscribedMachines, setSubscribedMachines] = useState<string[]>([]);
 
   const serviceRef = useRef<MachineDataService | null>(null);
+  const timeSeriesManagerRef = useRef<TimeSeriesDataManager | null>(null);
   const cleanupFunctions = useRef<(() => void)[]>([]);
   const isInitialized = useRef(false);
 
@@ -95,6 +101,14 @@ export function WebSocketProvider({ children, autoConnect = true }: WebSocketPro
     console.log('🌐 Initializing WebSocket context service...');
     isInitialized.current = true;
     serviceRef.current = getMachineDataService();
+    timeSeriesManagerRef.current = getTimeSeriesManager();
+
+    // Set JWT token for REST API calls if available
+    const token = localStorage.getItem('access_token');
+    if (token && serviceRef.current) {
+      serviceRef.current.setAuthToken(token);
+      console.log('🔐 JWT token set for REST API calls');
+    }
 
     const cleanup: (() => void)[] = [];
 
@@ -117,6 +131,12 @@ export function WebSocketProvider({ children, autoConnect = true }: WebSocketPro
 
     // Real-time data listener
     const realtimeCleanup = serviceRef.current.onRealtimeUpdate((data) => {
+      // Process with TimeSeriesManager first (centralized processing)
+      if (timeSeriesManagerRef.current) {
+        timeSeriesManagerRef.current.addRealtimeData(data);
+      }
+
+      // Then update context state for components that need raw WebSocket data
       setRealtimeData(prev => {
         const next = new Map(prev);
         next.set(String(data.deviceId), data);
@@ -128,6 +148,12 @@ export function WebSocketProvider({ children, autoConnect = true }: WebSocketPro
 
     // SPC data listener
     const spcCleanup = serviceRef.current.onSPCUpdate((data) => {
+      // Process with TimeSeriesManager first (centralized processing)
+      if (timeSeriesManagerRef.current) {
+        timeSeriesManagerRef.current.addSPCData(data);
+      }
+
+      // Then update context state for components that need raw WebSocket data
       setSPCData(prev => {
         const next = new Map(prev);
         next.set(String(data.deviceId), data);
@@ -150,6 +176,12 @@ export function WebSocketProvider({ children, autoConnect = true }: WebSocketPro
 
     // History data listener
     const historyCleanup = serviceRef.current.onMachineHistory((data) => {
+      // Process with TimeSeriesManager first (centralized processing)
+      if (timeSeriesManagerRef.current) {
+        timeSeriesManagerRef.current.addHistoricalData(data);
+      }
+
+      // Then update context state for components that need raw WebSocket data
       setHistoryData(prev => {
         const next = new Map(prev);
         next.set(String(data.deviceId), data);
@@ -251,6 +283,14 @@ export function WebSocketProvider({ children, autoConnect = true }: WebSocketPro
     setAlerts(prev => prev.filter((_, i) => i !== index));
   }, []);
 
+  // JWT Authentication management (v2.0)
+  const updateAuthToken = useCallback((token: string) => {
+    if (serviceRef.current) {
+      serviceRef.current.setAuthToken(token);
+      console.log('🔐 JWT token updated for REST API calls');
+    }
+  }, []);
+
   const contextValue: WebSocketContextValue = {
     // Connection state
     isConnected,
@@ -286,7 +326,10 @@ export function WebSocketProvider({ children, autoConnect = true }: WebSocketPro
 
     // Alert management
     clearAlerts,
-    removeAlert
+    removeAlert,
+
+    // JWT Authentication (v2.0)
+    updateAuthToken
   };
 
   return (

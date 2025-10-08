@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   getFactoriesMachinesByUserId,
   updateMachineIndex,
@@ -166,13 +166,11 @@ export default function Factory() {
   }, [userId, factoryId]);
 
   // Device ID mapping function - convert machineId to backend format
-  const getDeviceId = (machine) => {
+  const getDeviceId = useCallback((machine) => {
     // Based on websocket-test.html working with "postgres machine 1"
-    // Try the exact format that works in the test
     const deviceId = `postgres machine ${machine.machineId}`;
-    console.log(`🔧 Device ID mapping: machineId ${machine.machineId} -> deviceId "${deviceId}"`);
     return deviceId;
-  };
+  }, []);
 
   // Subscribe to all machines when connected and list is loaded
   useEffect(() => {
@@ -194,7 +192,7 @@ export default function Factory() {
     } else if (!isConnected) {
       setSubscribedMachines(new Set());
     }
-  }, [isConnected, factories, subscribeToMachine, requestMachineStatus]);
+  }, [isConnected, factories, getDeviceId, subscribeToMachine, requestMachineStatus]);
 
   const handleAddMachine = (factoryIndex, index) => {
     setMachineDialogState(machineDialogState.map((open, i) => (i === factoryIndex ? true : open)));
