@@ -10,15 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getFactoriesMachinesByUserId } from '@/api/machinesServices';
 
-// Local sparkline generator (replaces mock import)
-const generateSparklineData = () => Array.from({ length: 60 }, (_, i) => ({
-  time: i,
-  cycleTime: 12 + Math.sin(i / 10) * 2 + Math.random() * 0.5,
-  shotRate: 4.8 + Math.sin(i / 8) * 0.3 + Math.random() * 0.2
-}));
+// Remove hardcoded sparkline data - will be replaced with real SPC data
 
 export function ProductionStatusTiles() {
-  const sparklineData = useMemo(() => generateSparklineData(), []);
   const [machines, setMachines] = useState<MachineData[]>([]);
 
   // Get device IDs for time-series data management
@@ -235,7 +229,7 @@ export function ProductionStatusTiles() {
           <MachineCard
             key={machine.id}
             machine={machine}
-            sparklineData={sparklineData}
+            sparklineData={[]} // Remove hardcoded sparkline data
             isConnected={isConnected}
           />
         ))}

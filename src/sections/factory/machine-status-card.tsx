@@ -70,7 +70,6 @@ export default function MachineStatusCard({
   // Use factory-provided WebSocket data instead of individual hooks
   // const deviceId = String(machine.machineId); // Now provided by factory
   // Individual hooks disabled in favor of factory-level connection
-  console.log(`🔧 Machine ${machine.machineId} status card - deviceId: ${deviceId}, hasRealtimeData: ${!!realtimeData}, isConnected: ${isConnected}`);
 
   const handleDelete = async (e) => {
     e.stopPropagation();

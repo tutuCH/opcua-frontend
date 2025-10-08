@@ -1,7 +1,8 @@
-// React hook for managing time-series data with WebSocket integration
+// React hook for managing time-series data with hybrid WebSocket + REST API integration (v2.0)
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useWebSocketContext } from '@/contexts/WebSocketContext';
 import { getTimeSeriesManager, TimeSeriesPoint, MachineTimeSeries } from '@/services/timeSeriesService';
+import { getMachineDataService } from '@/services/websocketService';
 
 export interface UseTimeSeriesDataOptions {
   deviceIds?: string[];
@@ -70,68 +71,63 @@ export function useTimeSeriesData(options: UseTimeSeriesDataOptions = {}): UseTi
     historyUpdateCount
   } = useWebSocketContext();
 
-  // Process realtime updates from context
-  useEffect(() => {
-    if (!enableRealtime) return;
+  // Note: Realtime data processing is now handled centrally in WebSocketContext
+  // This eliminates duplicate processing when multiple components use this hook
 
-    realtimeData.forEach((data) => {
-      const dataPoint = timeSeriesManager.current.addRealtimeData(data);
-      if (dataPoint) {
-        setLastUpdateTime(new Date());
-        setRefreshTrigger(prev => prev + 1);
-      }
-    });
-  }, [realtimeData, realtimeUpdateCount, enableRealtime]);
+  // Note: SPC data processing is now handled centrally in WebSocketContext
+  // This eliminates duplicate processing when multiple components use this hook
 
-  // Process SPC updates from context
-  useEffect(() => {
-    if (!enableSPC) return;
+  // Note: Historical data processing is now handled centrally in WebSocketContext
+  // This eliminates duplicate processing when multiple components use this hook
 
-    spcData.forEach((data) => {
-      const dataPoint = timeSeriesManager.current.addSPCData(data);
-      if (dataPoint) {
-        setLastUpdateTime(new Date());
-        setRefreshTrigger(prev => prev + 1);
-      }
-    });
-  }, [spcData, spcUpdateCount, enableSPC]);
+  // Request historical data for a device (v2.0 - uses REST API)
+  const requestHistoricalData = useCallback(async (deviceId: string, timeRange: string = historicalRange) => {
+    try {
+      // Extract machine ID from device ID (e.g., "postgres machine 1" -> "1")
+      const machineId = deviceId.replace('postgres machine ', '');
 
-  // Process historical data from context
-  useEffect(() => {
-    historyData.forEach((data) => {
-      console.log('📚 Received historical data:', {
-        deviceId: data.deviceId,
-        timeRange: data.timeRange,
-        dataLength: Array.isArray(data.data) ? data.data.length : 'not array'
+      console.log(`📚 Requesting historical data via REST API for ${deviceId} (${timeRange})`);
+
+      // Use REST API to load historical data
+      const webSocketService = getMachineDataService();
+      await timeSeriesManager.current.loadHistoricalDataREST(webSocketService, machineId, {
+        timeRange,
+        limit: 1000
       });
 
-      const dataPoints = timeSeriesManager.current.addHistoricalData(data);
-      if (dataPoints.length > 0) {
-        setLastUpdateTime(new Date());
-        setRefreshTrigger(prev => prev + 1);
-      }
-    });
-  }, [historyData, historyUpdateCount]);
+      setRefreshTrigger(prev => prev + 1);
+      setLastUpdateTime(new Date());
 
-  // Subscribe to devices when connected
+    } catch (error) {
+      console.error(`❌ Failed to load historical data for ${deviceId}:`, error);
+    }
+  }, [historicalRange]);
+
+  // React to data updates from WebSocket context (triggers re-renders and data access)
+  useEffect(() => {
+    setLastUpdateTime(new Date());
+    setRefreshTrigger(prev => prev + 1);
+  }, [realtimeUpdateCount, spcUpdateCount, historyUpdateCount]);
+
+  // Subscribe to devices when connected (v2.0 hybrid approach)
   useEffect(() => {
     if (isConnected && autoSubscribe && deviceIds.length > 0) {
       deviceIds.forEach(deviceId => {
         if (!subscribedDevices.current.has(deviceId)) {
-          console.log(`🔌 Auto-subscribing to device: ${deviceId}`);
+          console.log(`🔌 Auto-subscribing to device: ${deviceId} (WebSocket for real-time, REST for historical)`);
+
+          // Subscribe for real-time updates via WebSocket
           subscribeToMachine(deviceId);
           requestMachineStatus(deviceId);
 
-          // Request historical data after a short delay
-          setTimeout(() => {
-            requestHistoricalData(deviceId, historicalRange);
-          }, 1000);
+          // Load historical data via REST API (no delay needed)
+          requestHistoricalData(deviceId, historicalRange);
 
           subscribedDevices.current.add(deviceId);
         }
       });
     }
-  }, [isConnected, autoSubscribe, deviceIds, historicalRange, subscribeToMachine, requestMachineStatus]);
+  }, [isConnected, autoSubscribe, deviceIds, historicalRange, subscribeToMachine, requestMachineStatus, requestHistoricalData]);
 
   // Update available machines list
   useEffect(() => {
@@ -146,17 +142,6 @@ export function useTimeSeriesData(options: UseTimeSeriesDataOptions = {}): UseTi
     });
     setTotalDataPoints(total);
   }, [refreshTrigger]);
-
-  // Request historical data for a device
-  const requestHistoricalData = useCallback((deviceId: string, timeRange: string = historicalRange) => {
-    if (isConnected) {
-      console.log(`📚 Requesting historical data for ${deviceId} (${timeRange})`);
-      requestMachineHistory(deviceId, timeRange);
-      timeSeriesManager.current.initializeMachine(deviceId);
-    } else {
-      console.warn('Cannot request historical data: WebSocket not connected');
-    }
-  }, [isConnected, requestMachineHistory, historicalRange]);
 
   // Clear data for a specific machine
   const clearMachineData = useCallback((deviceId: string) => {

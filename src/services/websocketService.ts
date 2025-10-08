@@ -102,7 +102,17 @@ export function isRealtimeData(data: any): data is MachineRealtimeData {
 }
 
 export function isHistoricalData(data: any): data is MachineHistoricalPoint[] {
-  return Array.isArray(data) && data.length > 0 && data[0]._measurement === 'realtime';
+  // Handle both direct array format and nested object format from backend
+  if (Array.isArray(data) && data.length > 0 && data[0]._measurement === 'realtime') {
+    return true;
+  }
+
+  // Handle backend response format: { realtime: [], spc: [] }
+  if (data && typeof data === 'object' && Array.isArray(data.realtime)) {
+    return true;
+  }
+
+  return false;
 }
 
 export function isSPCData(data: any): data is MachineSPCData {
@@ -120,6 +130,7 @@ export class MachineDataService {
   private baseUrl: string;
   private isConnecting: boolean = false;
   private connectionPromise: Promise<void> | null = null;
+  private authToken: string | null = null;
 
   // Event callbacks
   private realtimeCallbacks = new Set<EventCallback>();
@@ -319,13 +330,11 @@ export class MachineDataService {
     this.socket.emit('get-machine-status', { deviceId });
   }
 
+  // DEPRECATED: Use REST API methods instead for historical data
   requestMachineHistory(deviceId: string, timeRange: string = '-1h') {
-    if (!this.socket || !this.socket.connected) {
-      console.warn('WebSocket not connected. Cannot request machine history:', deviceId);
-      return;
-    }
-
-    this.socket.emit('get-machine-history', { deviceId, timeRange });
+    console.warn('DEPRECATED: requestMachineHistory() is deprecated. Use getRealtimeHistory() or getSPCHistory() REST methods instead');
+    console.warn('WebSocket historical data requests have been removed from the backend for performance reasons');
+    return;
   }
 
   ping() {
@@ -335,6 +344,100 @@ export class MachineDataService {
     }
 
     this.socket.emit('ping');
+  }
+
+  // JWT Token Management
+  setAuthToken(token: string) {
+    this.authToken = token;
+  }
+
+  getAuthToken(): string | null {
+    return this.authToken;
+  }
+
+  // REST API Methods for Historical Data (v2.0)
+  private getApiBaseUrl(): string {
+    // Convert WebSocket URL to HTTP URL for REST API
+    const backendUrl = (import.meta as any).env?.VITE_BACKEND_URL || 'http://localhost:3000';
+    return backendUrl.replace(/^ws/, 'http');
+  }
+
+  private async fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+
+    if (this.authToken) {
+      headers['Authorization'] = `Bearer ${this.authToken}`;
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response;
+  }
+
+  async getRealtimeHistory(machineId: string, options: {
+    timeRange?: string;
+    limit?: number;
+    offset?: number;
+    aggregate?: string;
+  } = {}): Promise<any> {
+    const params = new URLSearchParams({
+      timeRange: options.timeRange || '-1h',
+      limit: String(options.limit || 100),
+      offset: String(options.offset || 0),
+      aggregate: options.aggregate || 'none'
+    });
+
+    const url = `${this.getApiBaseUrl()}/machines/${machineId}/realtime-history?${params}`;
+    const response = await this.fetchWithAuth(url);
+    return response.json();
+  }
+
+  async getSPCHistory(machineId: string, options: {
+    timeRange?: string;
+    limit?: number;
+    offset?: number;
+    aggregate?: string;
+  } = {}): Promise<any> {
+    const params = new URLSearchParams({
+      timeRange: options.timeRange || '-1h',
+      limit: String(options.limit || 50),
+      offset: String(options.offset || 0),
+      aggregate: options.aggregate || 'none'
+    });
+
+    const url = `${this.getApiBaseUrl()}/machines/${machineId}/spc-history?${params}`;
+    const response = await this.fetchWithAuth(url);
+    return response.json();
+  }
+
+  async getMachineStatusREST(machineId: string): Promise<any> {
+    const url = `${this.getApiBaseUrl()}/machines/${machineId}/status`;
+    const response = await this.fetchWithAuth(url);
+    return response.json();
+  }
+
+  async streamHistoryData(machineId: string, options: {
+    timeRange?: string;
+    dataType?: 'realtime' | 'spc' | 'both';
+  } = {}): Promise<any> {
+    const params = new URLSearchParams({
+      timeRange: options.timeRange || '-4h',
+      dataType: options.dataType || 'both'
+    });
+
+    const url = `${this.getApiBaseUrl()}/machines/${machineId}/history/stream?${params}`;
+    const response = await this.fetchWithAuth(url);
+    return response.json();
   }
 
   // Event callback management

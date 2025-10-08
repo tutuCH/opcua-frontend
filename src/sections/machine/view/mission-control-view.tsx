@@ -1,22 +1,26 @@
 import React, { useState, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { 
-  Activity, 
-  BarChart3, 
-  TrendingUp, 
-  ScatterChart, 
-  Clock, 
-  PieChart, 
-  Settings, 
-  MoreHorizontal, 
-  Calendar, 
-  CalendarDays, 
-  Database, 
-  FileText, 
-  AlertTriangle, 
-  CheckCircle, 
-  XCircle 
+import {
+  Activity,
+  BarChart3,
+  TrendingUp,
+  ScatterChart,
+  Clock,
+  PieChart,
+  Settings,
+  MoreHorizontal,
+  Calendar,
+  CalendarDays,
+  Database,
+  FileText,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Target,
+  Gauge,
+  LineChart,
+  Zap
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,6 +40,12 @@ import { UtilizationView } from '../components/UtilizationView';
 import { GanttView } from '../components/GanttView';
 import { TraceabilityView } from '../components/TraceabilityView';
 
+// Import new manufacturing analytics components
+import { SPCControlChart } from '../components/charts/SPCControlChart';
+import { InjectionProfileChart } from '../components/charts/InjectionProfileChart';
+import { YieldDefectChart } from '../components/charts/YieldDefectChart';
+import { OEEGauges } from '../components/charts/OEEGauges';
+
 
 export default function MissionControlView() {
   const { t } = useTranslation();
@@ -44,6 +54,10 @@ export default function MissionControlView() {
 
   const views = [
     { id: 'production', label: t('dashboard.views.production'), icon: Activity },
+    { id: 'oee', label: 'OEE Dashboard', icon: Gauge },
+    { id: 'spc', label: 'SPC Control', icon: Target },
+    { id: 'injection', label: 'Injection Profile', icon: Zap },
+    { id: 'yield', label: 'Yield & Defects', icon: LineChart },
     { id: 'quality', label: t('dashboard.views.quality'), icon: BarChart3 },
     { id: 'reports', label: t('dashboard.views.reports'), icon: FileText },
     { id: 'trends', label: t('dashboard.views.trends'), icon: TrendingUp },
@@ -56,6 +70,12 @@ export default function MissionControlView() {
 
   // Production Status View - uses proper component
   const renderProductionStatus = () => <ProductionStatusTiles />;
+
+  // New Manufacturing Analytics Views
+  const renderOEEDashboard = () => <OEEGauges />;
+  const renderSPCControl = () => <SPCControlChart />;
+  const renderInjectionProfile = () => <InjectionProfileChart />;
+  const renderYieldDefects = () => <YieldDefectChart />;
 
   // Quality View - uses proper component from sample
   const renderQualityView = () => <QualityView />;
@@ -128,6 +148,10 @@ export default function MissionControlView() {
         {/* Main Content */}
         <div className="p-6">
           {selectedView === 'production' && renderProductionStatus()}
+          {selectedView === 'oee' && renderOEEDashboard()}
+          {selectedView === 'spc' && renderSPCControl()}
+          {selectedView === 'injection' && renderInjectionProfile()}
+          {selectedView === 'yield' && renderYieldDefects()}
           {selectedView === 'quality' && renderQualityView()}
           {selectedView === 'reports' && renderReports()}
           {selectedView === 'trends' && renderTrendAnalysis()}
